@@ -145,7 +145,7 @@ dest-dir       - non-existent directory for web pages
     (if* force-flag
        then (when (not (file-directory-p dest-dir))
 	      (error "~a is not a directory." dest-dir))
-	    (my-delete-directory-and-files dest-dir)
+	    (delete-directory-and-files dest-dir :force t)
        else (error "~a already exists." dest-dir)))
 
   (when (null title)
@@ -168,7 +168,7 @@ dest-dir       - non-existent directory for web pages
 	    (format t "~&~@[~a~%~]Cleaning up...~%" condition)
 	    (force-output)
 	    (when (probe-file dest-dir)
-	      (my-delete-directory-and-files dest-dir)))))
+	      (delete-directory-and-files dest-dir :force t)))))
     (push cleanup-form .cleanup-forms.)
     (add-signal-handler
      2
@@ -659,76 +659,6 @@ dest-dir       - non-existent directory for web pages
   (let* ((start (* (1- section-index) section-size))
 	 (end (+ start section-size)))
     (subseq list start end)))
-
-#+ignore
-(defun my-read-line (stream &optional terminate-on-space)
-  (let ((term-chars
-	 `(#\return #\newline ,@(when terminate-on-space '(#\space))))
-	(line '())
-	(eof nil)
-	c)
-    (loop
-      (setq c (read-char stream nil stream))
-      (when (or (and (char= c stream) (setq eof t))
-		(and (member c term-chars :test #'char=)
-		     ;; read-char until no more term-chars or EOF
-		     (loop
-		       (setq c (peek-char nil stream nil stream))
-		       (when (or (and (char= c stream) (setq eof t))
-				 (not (member c term-chars :test #'char=)))
-			 (return t))
-		       ;; toss it
-		       (read-char stream))))
-	(return
-	  (if* (and eof (null line))
-	     then stream
-	     else (concatenate 'simple-string (nreverse line)))))
-      (push c line))))
-
-#+ignore
-(defun read-lines (stream)
-  (let ((lines '())
-	line)
-    (loop
-      (setq line (my-read-line stream))
-      (when (eq stream line) (return (nreverse lines)))
-      (push line lines))))
-
-(defun my-delete-directory-and-files (directory)
-  (setq directory (pathname-as-directory (pathname directory)))
-  (when (not (probe-file directory))
-    (return-from my-delete-directory-and-files nil))
-  (when (not *quiet*) (format t "Removing ~a~%" directory))
-  (let ((directories '()))
-    (map-over-directory #'(lambda (p)
-			    (if* (file-directory-p p)
-			       then (push p directories)
-			       else (force-delete-file p)))
-			directory
-			:include-directories t)
-    (setq directories
-      ;; Sort "longest directory first", which will allow them to be
-      ;; removed in the correct order.
-      (sort directories
-	    #'(lambda (p1 p2)
-		(> (length (pathname-directory p1))
-		   (length (pathname-directory p2))))))
-    (dolist (p directories)
-      (ignore-errors (delete-directory p))))
-  t)
-
-#+ignore
-(defun my-delete-directory (directory)
-  (when (probe-file directory)
-    (handler-case (delete-directory directory)
-      (error-dir (c) (error "~a: ~a" directory c)))))
-
-(defun force-delete-file (file)
-  (let ((p (pathname file)))
-    (when (aclwin:file-read-only-p p)
-;;;; there should be a better way:
-      (excl::filesys-chmod (namestring p) #o777))
-    (delete-file p)))
 
 (defun chop-list (list n)
   (do* ((l list (cdr l))

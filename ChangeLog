@@ -1,5 +1,9 @@
 2002-10-16  Kevin Layer  <layer@relay.known.net>
 
+	* pubpics.cl: remove #+ignore'd code; remove
+	my-delete-directory-and-files since I fixed the ACL version (added
+	:force keyword, too)
+
 	* blank.gif: adjust color
 	* pubpics.cl: fix to last rev
 
