@@ -1,5 +1,9 @@
 2001-04-18    <layer@relay.known.net>
 
+	* pubpics.cl:
+	- fix -n
+	- fix sorting of files
+
 	* buildit.cl: rename output dir to pubpics/.
 	* makefile: improve `dist' rule
 

@@ -59,7 +59,8 @@
 (defvar *debug* nil)
 (defvar *usage*
     "~
-Usage: [-c name] [-V] [-q] [-t title] [-d description] source-dir dest-dir
+Usage: [-c name] [-n size] [-V] [-q] [-t title] [-d description]
+       source-dir dest-dir
 -c name        - for the largest image size, add copyright in a border for
                  `name' 
 -n size        - max number of images on each index page--probably should
@@ -81,7 +82,6 @@ dest-dir       - non-existent directory for web pages
 (defvar *large-divisor* 1.5 "How much `large' images are scaled down.")
 (defvar *medium-divisor* 2  "How much `medium' images are scaled down.")
 (defvar *small-divisor* 3   "How much `small' images are scaled down.")
-
 (defvar .cleanup-forms. nil)
 
 (defun pubpics-init-function ()
@@ -91,7 +91,7 @@ dest-dir       - non-existent directory for web pages
   #+linux (setf (sys:getenv "SHELL") "/bin/csh")
   (handler-case
       (sys:with-command-line-arguments
-	  ("c:d:fI:nqt:V"
+	  ("c:d:fI:n:qt:V"
 	   copyright description force-flag image-file index-size
 	   *quiet* title
 	   print-version-and-exit)
@@ -105,7 +105,7 @@ dest-dir       - non-existent directory for web pages
 	(pubpics (first rest) (second rest) :force-flag force-flag
 		 :title title :description description
 		 :copyright copyright
-		 :index-size index-size)
+		 :index-size (read-from-string index-size))
 	#+rsc-scheduler (rsc-finalize)
 	(exit 0 :quiet t))
     (error (c)
@@ -186,27 +186,17 @@ dest-dir       - non-existent directory for web pages
   ;; Put the pictures in "numerical" order.
   (setq pictures
     (handler-case
-	(sort (copy-list pictures)
-	      #'(lambda (item1 item2)
-		  ;; return true, iff item1 < item2
-		  (let* ((item1
-			  (mapcar #'read-from-string
-				  (delimited-string-to-list
-				   (pathname-name (car item1))
-				   "-")))
-			 (item2
-			  (mapcar #'read-from-string
-				  (delimited-string-to-list
-				   (pathname-name (car item2))
-				   "-"))))
-		    (do* ((x1 item1 (cdr x1))
-			  (x2 item2 (cdr x2)))
-			((or (null x1) (null x2)) nil)
-		      (when (< (car x1) (car x2)) (return t))
-		      (when (> (car x1) (car x2)) (return nil))))))
-      (error ()
+	(let ((sample-file (pathname-name (car (car pictures)))))
+	  (sort (copy-list pictures)
+		(if* (date-based-filename-p sample-file)
+		   then #'date-based-filename-sort-function
+		 elseif (numbered-filename-p sample-file)
+		   then #'numbered-filename-sort-function
+		   else (error "can't figure out naming scheme"))))
+      (error (c)
 	;; they might not have the new names, so don't sort if an error
 	;; occurs.
+	(format t "Error sorting files; ~a" c)
 	pictures)))
   
   (when (not *quiet*)
@@ -291,6 +281,49 @@ dest-dir       - non-existent directory for web pages
     (incf i))
 
   (values))
+
+(defun date-based-filename-p (filename)
+  (match-regexp
+   (load-time-value (compile-regexp "^[0-9]+-[0-9]+"))
+   filename
+   :return nil))
+
+(defun numbered-filename-p (filename)
+  (match-regexp
+   (load-time-value (compile-regexp "^[a-zA-Z]+[0-9]+"))
+   filename
+   :return nil))
+
+(defun date-based-filename-sort-function (item1 item2)
+  ;; return true, iff item1 < item2
+  (let* ((item1 (mapcar #'read-from-string
+			(delimited-string-to-list
+			 (pathname-name (car item1))
+			 "-")))
+	 (item2 (mapcar #'read-from-string
+			(delimited-string-to-list
+			 (pathname-name (car item2))
+			 "-"))))
+    (do* ((x1 item1 (cdr x1))
+	  (x2 item2 (cdr x2)))
+	((or (null x1) (null x2)) nil)
+      (when (< (car x1) (car x2)) (return t))
+      (when (> (car x1) (car x2)) (return nil)))))
+
+(defun numbered-filename-sort-function (item1 item2)
+  ;; return true, iff item1 < item2
+  (let* ((re (load-time-value (compile-regexp "[-a-zA-Z_]+\\([0-9]+\\)")))
+	 (n1 (multiple-value-bind (found ignore i)
+		 (match-regexp re (pathname-name (car item1)))
+	       (declare (ignore ignore))
+	       (when (not found) (error "can't parse filename1"))
+	       (read-from-string i)))
+	 (n2 (multiple-value-bind (found ignore i)
+		 (match-regexp re (pathname-name (car item2)))
+	       (declare (ignore ignore))
+	       (when (not found) (error "can't parse filename2"))
+	       (read-from-string i))))
+    (< n1 n2)))
 
 (defun image-info (file)
   (let ((ed (parse-exif-data file)))
