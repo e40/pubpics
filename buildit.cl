@@ -9,7 +9,7 @@
 (generate-application
  "pubpics"
  "pubpics/"
- '(#-mswindows :process "pubpics.fasl")
+ '(:trace #-mswindows :process "pubpics.fasl")
  :restart-init-function 'pubpics-init-function
  :include-ide nil
  :include-compiler nil

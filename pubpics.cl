@@ -56,6 +56,7 @@
     "~
 Usage: [-p] [-c name] [-n size] [-V] [-q] [-t title] [-d description]
        source-dir dest-dir
+-D             - debug
 -c name        - for the largest image size, add copyright in a border for
                  `name' 
 -d description - addition information for the index page
@@ -74,7 +75,7 @@ dest-dir       - non-existent directory for web pages
 
 (defvar *image-magick-root*
     #+mswindows "c:/Program Files/ImageMagick-5.4.9-Q16/"
-    #-mswindows "/usr/bin/X11/")
+    #-mswindows "/usr/bin/")
 
 (defvar *large-divisor* 1.5 "How much `large' images are scaled down.")
 (defvar *medium-divisor* 2  "How much `medium' images are scaled down.")
@@ -88,15 +89,17 @@ dest-dir       - non-existent directory for web pages
   #+linux (setf (sys:getenv "SHELL") "/bin/csh")
   (flet ((doit ()
 	   (sys:with-command-line-arguments
-	       ("c:d:fI:n:pqrt:V"
-		copyright description force-flag image-file index-size
+	       ("c:Dd:fn:pqrt:V"
+		copyright debug description force-flag index-size
 		pause *quiet* recurse title print-version-and-exit)
 	       (rest)
-	     (declare (ignore image-file))
 	     (when print-version-and-exit
 	       (format t "pubpics: ~a~%" *version*)
 	       (exit 0 :quiet t))
 	     (when (/= 2 (length rest)) (error *usage*))
+	     (when debug
+	       (trace pubpics)
+	       (setq *debug* t))
 	     #+rsc-scheduler (setq *quiet* t)
 	     (pubpics (first rest) (second rest) :force-flag force-flag
 		      :title title :description description
@@ -112,12 +115,14 @@ dest-dir       - non-existent directory for web pages
 	     (exit 0 :quiet t))))
     #+debug-pubpics (doit)
     #-debug-pubpics
-    (handler-case
-	(doit)
-      (error (c)
-	(format t "~a~%" c)
-	(dolist (form .cleanup-forms.) (funcall form c))
-	(exit 1 :quiet t)))))
+    (if* *debug*
+       then (doit)
+       else (handler-case
+		(doit)
+	      (error (c)
+		(format t "~a~%" c)
+		(dolist (form .cleanup-forms.) (funcall form c))
+		(exit 1 :quiet t))))))
 
 (defun pubpics (source-dir dest-dir
 		&key force-flag title description copyright index-size recurse
@@ -476,7 +481,7 @@ dest-dir       - non-existent directory for web pages
       :newline
       (:td 
        :newline
-       (:h2
+       (:h3
 	(:princ-safe (format nil "~a (~a) " title (file-namestring image)))
 	
 	(dolist (size other-sizes)

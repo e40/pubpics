@@ -1,4 +1,4 @@
-				-[Wed Feb 26 13:43:47 2003 by layer]-
+				-[Thu Feb 27 09:49:50 2003 by layer]-
 
 Table of Contents:
 
@@ -161,5 +161,5 @@ evaluate this:
 
       (load "buildit.cl")
 
-It will make a publics/ directory, which is how the pubpics-<version>
+It will make a pubpics/ directory, which is how the pubpics-<version>
 directories above were created.
