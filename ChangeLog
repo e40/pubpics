@@ -1,5 +1,9 @@
 2001-04-18    <layer@relay.known.net>
 
+	* makefile: make default rule just build
+	* pubpics.cl: add comments; add #+rsc-scheduler before lots of
+	stuff
+
 	* pubpics.cl: add -n and have -c take an argument
 
 2001-04-02    <layer@relay.known.net>

@@ -1,19 +1,46 @@
+;; Web publisher for digital photos, written by Kevin Layer.
+;; This code is in the public domain.  You may do with it what you
+;; want.
+;;
+;; What exactly does it do?  It takes as input a set of jpg's from a
+;; digital camera and produces nice looking web pages, with index pages
+;; containing thumbnails.  The original digital pictures are resized into
+;; three sets of pictures, allowing viewers to sequentially or randomly
+;; browse in any size.  The largest images can optionally have a copyright
+;; notice added to them.
+;;
+;; Required software:
+;; - Allegro CL: probably any version will do, but I used ACL 6.0.
+;;   http://www.franz.com
+;; - ImageMagick 5.2.7: other later versions may work, but I'm pretty sure
+;;   some earlier versions have problems.  It works on Windows (at least
+;;   2000) and Linux (at least RedHat 6.1).
+;;   http://www.imagemagick.org
+;;
+;; This program works on Windows (at least 2000) and Linux (at least RedHat
+;; 6.1).
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; $Id$
 
 (in-package :user)
 
 (eval-when (compile)
-  ;;(push :rsc-scheduler *features*)
+  ;; An experimental run-shell-command scheduler that allows multiple,
+  ;; concurrent run-shell-command's, in order to take advantage of multiple
+  ;; processors.  Because ImageMagik takes so much memory, this doesn't
+  ;; turn out to save a lot of time (unless you have LOTS of RAM).
+  #+ignore (push :rsc-scheduler *features*)
   
   (compile-file-if-needed
-   (or (probe-file "exif-utils/exifdump.cl")
-       #+mswindows (probe-file "c:/src/exif-utils/exifdump.cl")
-       (error "Could not find exifdump.cl"))))
+   (or (probe-file "exif-utils/exifinfo.cl")
+       #+mswindows (probe-file "c:/src/exif-utils/exifinfo.cl")
+       (error "Could not find exifinfo.cl"))))
 
 (eval-when (compile eval load)
-  (require :exifdump
-	   (or (probe-file "exif-utils/exifdump.fasl")
-	       #+mswindows (probe-file "c:/src/exif-utils/exifdump.fasl")))
+  (require :exifinfo
+	   (or (probe-file "exif-utils/exifinfo.fasl")
+	       #+mswindows (probe-file "c:/src/exif-utils/exifinfo.fasl")))
+  (use-package :util.exif)
   (require :aserve)
   (use-package :net.html.generator)
   (require :aclwin)
@@ -31,27 +58,31 @@
 (defvar *quiet* nil)
 (defvar *debug* nil)
 (defvar *usage*
-    "Usage: [-c name] [-V] [-q] [-t title] [-d description] source-dir dest-dir
--c name -- for the largest image size, add copyright in a border for `name'
--n size -- max number of images on each index page
--V -- print version info and exit
--q -- quiet mode (do not print informative messages)
--t title -- set title of generated pages to `title', and use this title
-   at the top of each photo page
--d description -- addition information for the index page
-source-dir -- directory containing images
-dest-dir -- non-existent directory for web pages
+    "~
+Usage: [-c name] [-V] [-q] [-t title] [-d description] source-dir dest-dir
+-c name        - for the largest image size, add copyright in a border for
+                 `name' 
+-n size        - max number of images on each index page--probably should
+                 be a multiple of 3, since there are three thumbnails per
+                 row on each index page
+-V             - print version info and exit
+-q             - quiet mode--do not print informative messages
+-t title       - set title of generated pages to `title', and use this
+                 title at the top of each photo page
+-d description - addition information for the index page
+source-dir     - directory containing images
+dest-dir       - non-existent directory for web pages
 ")
 
 (defvar *image-magick-root*
     #+mswindows "c:/ImageMagick/"
     #-mswindows "/usr/local/bin/")
 
-(defvar *large-divisor* 1.5)
-(defvar *medium-divisor* 2)
-(defvar *small-divisor* 3)
+(defvar *large-divisor* 1.5 "How much `large' images are scaled down.")
+(defvar *medium-divisor* 2  "How much `medium' images are scaled down.")
+(defvar *small-divisor* 3   "How much `small' images are scaled down.")
 
-(defvar *cleanup-forms* nil)
+(defvar .cleanup-forms. nil)
 
 (defun pubpics-init-function ()
   ;; The following makes run-shell-command interruptable.  Why, I have no
@@ -79,7 +110,7 @@ dest-dir -- non-existent directory for web pages
 	(exit 0 :quiet t))
     (error (c)
       (format t "~a" c)
-      (dolist (form *cleanup-forms*)
+      (dolist (form .cleanup-forms.)
 	(funcall form c))
       (exit 1 :quiet t))))
 
@@ -124,13 +155,13 @@ dest-dir -- non-existent directory for web pages
 	    (force-output)
 	    (when (probe-file dest-dir)
 	      (my-delete-directory-and-files dest-dir)))))
-    (push cleanup-form *cleanup-forms*)
+    (push cleanup-form .cleanup-forms.)
     (add-signal-handler
      2
      #'(lambda (sig cont)
 	 (format t "In SIGINT cleanup handler...~%")
 	 (force-output)
-	 (dolist (form *cleanup-forms*) (funcall form))
+	 (dolist (form .cleanup-forms.) (funcall form))
 	 (excl::sig-handler-exit sig cont))))
 
   (dolist (dir '("large/" "medium/" "small/" "thumbs/"
@@ -417,20 +448,6 @@ dest-dir -- non-existent directory for web pages
 	 (:princ-safe (format nil "A ~a image." size)))
 	:br))))))
 
-(defun page-number-to-index (image-number index-size size)
-  (let ((page-number (1+ (truncate image-number index-size))))
-    (namestring
-     (merge-pathnames
-      (make-pathname :type "htm")
-      (format nil "index~a~a"
-	      (case size
-		(:small "_small")
-		(:medium "")
-		(:large "_large"))
-	      (if* (= page-number 1)
-		 then ""
-		 else page-number))))))
-
 (defun make-index (size index-name dest-dir pictures title description
 		   index-size)
   (let* ((n-pictures (length pictures))
@@ -537,13 +554,6 @@ dest-dir -- non-existent directory for web pages
 			       :direction :output)
 		(gen-index s size title description pictures))))))
 
-(defun list-section (list section-index section-size)
-  ;; LIST is composed of SECTION-SIZE segments of elements.  Return the
-  ;; SECTION-INDEX subsequence of list elements.
-  (let* ((start (* (1- section-index) section-size))
-	 (end (+ start section-size)))
-    (subseq list start end)))
-
 (defun make-index-row (size pictures)
   (html
    (:tr
@@ -567,8 +577,29 @@ dest-dir -- non-existent directory for web pages
 	  ((:a :href picture) ((:font :size "2") (:princ-safe name))))
 	 :newline))))))
 
+(defun page-number-to-index (image-number index-size size)
+  (let ((page-number (1+ (truncate image-number index-size))))
+    (namestring
+     (merge-pathnames
+      (make-pathname :type "htm")
+      (format nil "index~a~a"
+	      (case size
+		(:small "_small")
+		(:medium "")
+		(:large "_large"))
+	      (if* (= page-number 1)
+		 then ""
+		 else page-number))))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;; utils which should be in allegro?????
+;;;; utils
+
+(defun list-section (list section-index section-size)
+  ;; LIST is composed of SECTION-SIZE segments of elements.  Return the
+  ;; SECTION-INDEX subsequence of list elements.
+  (let* ((start (* (1- section-index) section-size))
+	 (end (+ start section-size)))
+    (subseq list start end)))
 
 (defun my-read-line (stream &optional terminate-on-space)
   (let ((term-chars
@@ -655,15 +686,20 @@ dest-dir -- non-existent directory for web pages
   (substitute #\/ #\\ string)) 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; An experimental run-shell-command scheduler.
 
+#+rsc-scheduler
 (defparameter *rsc-number-of-processors* 3)
 
+#+rsc-scheduler
 (defparameter *rsc-status*
     ;; nil or (status . command)
     nil)
 
+#+rsc-scheduler
 (defparameter *rsc-procs* nil)
 
+#+rsc-scheduler
 (defun rsc-scheduler (command)
   (when (null *rsc-procs*) (rsc-initialize-processors))
   
@@ -672,6 +708,7 @@ dest-dir -- non-existent directory for web pages
       (setq *rsc-procs* (append *rsc-procs* (list p)))
       (push command (getf (mp:process-property-list p) :rsc-queue)))))
 
+#+rsc-scheduler
 (defun rsc-initialize-processors ()
   (setq *rsc-procs* nil)
   (setq *rsc-status* nil)
@@ -681,6 +718,7 @@ dest-dir -- non-existent directory for web pages
 			      #'rsc-process-queue)
      *rsc-procs*)))
 
+#+rsc-scheduler
 (defun rsc-process-queue (&aux (p mp:*current-process*))
   ;; our queue is stored on our plist
   (loop
@@ -721,6 +759,7 @@ dest-dir -- non-existent directory for web pages
 	 pid)
 	(when (/= 0 status) (setq *rsc-status* (cons status command)))))))
 
+#+rsc-scheduler
 (defun rsc-finalize ()
   (mp:without-scheduling
     (dolist (p *rsc-procs*)

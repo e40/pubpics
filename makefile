@@ -9,6 +9,8 @@ else
 mlisp = mlisp
 endif
 
+default:	build
+
 all:	build install
 
 build:	FORCE
@@ -25,6 +27,11 @@ else
 	rm -f /usr/local/bin/pubpics
 	ln -s /usr/local/pubpics/pubpics /usr/local/bin/pubpics
 endif
+
+dist-files = ChangeLog *.cl exif-utils/*.cl *.gif makefile
+
+dist:	FORCE
+	tar zcf dist.tar.gz $(dist-files)
 
 clean: FORCE
 	rm -fr *.fasl dist
