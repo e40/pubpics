@@ -1,5 +1,8 @@
 2001-04-18    <layer@relay.known.net>
 
+	* buildit.cl: rename output dir to pubpics/.
+	* makefile: improve `dist' rule
+
 	* makefile: make default rule just build
 	* pubpics.cl: add comments; add #+rsc-scheduler before lots of
 	stuff

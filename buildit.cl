@@ -8,7 +8,7 @@
 
 (generate-application
  "pubpics"
- "dist/"
+ "pubpics/"
  '(#-mswindows :process "pubpics.fasl")
  :restart-init-function 'pubpics-init-function
  :include-ide nil
@@ -40,12 +40,12 @@
 
 #+mswindows
 (progn
-  (delete-file "dist/pubpics.exe")
-  (sys:copy-file "sys:buildi.exe" "dist/pubpics.exe"))
+  (delete-file "pubpics/pubpics.exe")
+  (sys:copy-file "sys:buildi.exe" "pubpics/pubpics.exe"))
 
-(with-open-file (s "dist/pubpics.rc" :direction :output)
+(with-open-file (s "pubpics/pubpics.rc" :direction :output)
   (format s ".command-line: --~%"))
 
-(sys:copy-file "home.gif" "dist/home.gif")
-(sys:copy-file "next.gif" "dist/next.gif")
-(sys:copy-file "previous.gif" "dist/previous.gif")
+(sys:copy-file "home.gif" "pubpics/home.gif")
+(sys:copy-file "next.gif" "pubpics/next.gif")
+(sys:copy-file "previous.gif" "pubpics/previous.gif")
