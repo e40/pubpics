@@ -1,4 +1,4 @@
-				-[Wed Feb 26 13:05:04 2003 by layer]-
+				-[Wed Feb 26 13:43:47 2003 by layer]-
 
 Table of Contents:
 
@@ -120,27 +120,46 @@ There are, of course, lots of options.  Here's a description of them:
 files in the destination directory.
 
 ===============================================================================
-2. Binary installation [Linux only]
+2. Binary installation
 
-Unpack the .gz or .bz2 file like this:
+Copy the appropriate binary distribution:
 
-% tar zxf pubpics-1.25-linux-glibc-2.1.tar.gz
-or
-% bunzip2 < pubpics-1.25-linux-glibc-2.1.tar.bz2 | tar xf -
+ftp://ftp.franz.com/pub/examples/pubpics/pubpics-1.26-linux-glibc-2.1.tar.bz2
+ftp://ftp.franz.com/pub/examples/pubpics/pubpics-1.26-linux-glibc-2.1.tar.gz
+ftp://ftp.franz.com/pub/examples/pubpics/pubpics-1.26-windows.zip
 
-which will result in a ``pubpics-1.25'' sub-directory in the directory
-in which you execute the tar command above.
+Linux:
 
-You can then move this directory somewhere, say /usr/local/ and put
-/usr/local/pubpics-1.25 in your PATH so the `pubpics' executable is
-readily available.
+  Unpack the .gz or .bz2 file like this:
+
+  % tar zxf pubpics-1.26-linux-glibc-2.1.tar.gz
+  or
+  % bunzip2 < pubpics-1.26-linux-glibc-2.1.tar.bz2 | tar xf -
+
+  which will result in a ``pubpics-1.26'' sub-directory in the directory
+  in which you execute the tar command above.
+
+  You can then move this directory somewhere, say /usr/local/ and put
+  /usr/local/pubpics-1.26 in your PATH so the `pubpics' executable is
+  readily available.
+
+Windows:
+
+  Unzip the binary and put the files somewhere in your PATH.  The
+  file in the ``system-dlls'' sub-directory, msvcrt.dll, will only be
+  needed in rare cases--if you get an error message about this DLL
+  being missing, copy it into the same directory as pubpics.exe.
+
+Don't forget the ImageMagick installation required by this software.
+See http://www.imagemagick.org for more information.
 
 ===============================================================================
 3. Building from source code
 
-Start up a fully patched Allegro CL 6.2 and evaluate this:
+Start up a fully patched Allegro CL 6.2 Enterprise Edition and
+evaluate this:
 
       (load "buildit.cl")
 
 It will make a publics/ directory, which is how the pubpics-<version>
-directory in #2 above was created.
+directories above were created.
