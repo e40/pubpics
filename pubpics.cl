@@ -221,6 +221,7 @@
      -geometry \"~ax~a>\" ~
      -font ~a ~
      -pointsize 12 ~
+     -quality 50 ~
      -fill white ~
      -draw \"text 3,9 '~a 2000 D. Kevin Layer'\" ~
      \"~a\" \"~a\""
@@ -252,7 +253,7 @@
 					       (second dimensions)))))))
 		    (format nil
 			    "~
-~aconvert -geometry \"~ax~a>\" \"~a\" \"~a\""
+~aconvert -quality 50 -geometry \"~ax~a>\" \"~a\" \"~a\""
 			    *image-magick-root*
 			    (if* (eq :thumbnail type)
 			       then tn-width
