@@ -1,4 +1,12 @@
-				-[Wed Dec  4 14:51:20 2002 by layer]-
+				-[Wed Dec  4 14:58:41 2002 by layer]-
+
+Table of Contents:
+
+1. Introduction
+2. Installation
+
+===============================================================================
+1. Introduction
 
 `pubpics' is a program that builds web pages from digital photos.
 That is, it takes as input a bunch of jpg's from a digital camera and
@@ -109,3 +117,20 @@ There are, of course, lots of options.  Here's a description of them:
 
 `pubpics' will exit with status 0 if it can successfully make the
 files in the destination directory.
+
+===============================================================================
+2. Installation
+
+Unpack the .gz or .bz2 file like this:
+
+% tar zxf pubpics-1.25-linux-glibc-2.1.tar.gz
+or
+% bunzip2 < pubpics-1.25-linux-glibc-2.1.tar.bz2 | tar xf -
+
+which will result in a ``pubpics-1.25'' sub-directory in the directory
+in which you execute the tar command above.
+
+You can then move this directory somewhere, say /usr/local/ and put
+/usr/local/pubpics-1.25 in your PATH so the `pubpics' executable is
+readily available.
+
