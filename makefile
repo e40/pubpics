@@ -39,9 +39,9 @@ bin_dir = pubpics-$(dist-version)
 src_dir = pubpics-$(dist-version)-src
 bin_tar = $(bin_dir)-linux-glibc-2.1.tar
 
-bin_gz = $(bin_tar).gz
-bin_bz2 = $(bin_tar).bz2
-src_gz = $(src_dir).tar.gz
+bin_gz = DIST/$(bin_tar).gz
+bin_bz2 = DIST/$(bin_tar).bz2
+src_gz = DIST/$(src_dir).tar.gz
 
 dist:	FORCE
 	rm -fr $(bin_dir) $(bin_tar) $(src_dir) *.gz *.bz2
