@@ -70,6 +70,7 @@ Usage: [-c name] [-n size] [-V] [-q] [-t title] [-d description]
                  row on each index page
 -V             - print version info and exit
 -q             - quiet mode--do not print informative messages
+-r             - recurse on source-dir
 -t title       - set title of generated pages to `title', and use this
                  title at the top of each photo page
 -d description - addition information for the index page
@@ -93,9 +94,9 @@ dest-dir       - non-existent directory for web pages
   #+linux (setf (sys:getenv "SHELL") "/bin/csh")
   (flet ((doit ()
 	   (sys:with-command-line-arguments
-	       ("c:d:fI:n:qt:V"
+	       ("c:d:fI:n:qrt:V"
 		copyright description force-flag image-file index-size
-		*quiet* title print-version-and-exit)
+		*quiet* recurse title print-version-and-exit)
 	       (rest)
 	     (declare (ignore image-file))
 	     (when print-version-and-exit
@@ -106,6 +107,7 @@ dest-dir       - non-existent directory for web pages
 	     (pubpics (first rest) (second rest) :force-flag force-flag
 		      :title title :description description
 		      :copyright copyright
+		      :recurse recurse
 		      :index-size (when index-size
 				    (read-from-string index-size)))
 	     #+rsc-scheduler (rsc-finalize)
@@ -115,12 +117,12 @@ dest-dir       - non-existent directory for web pages
     (handler-case
 	(doit)
       (error (c)
-	(format t "~a" c)
+	(format t "~a~%" c)
 	(dolist (form .cleanup-forms.) (funcall form c))
 	(exit 1 :quiet t)))))
 
 (defun pubpics (source-dir dest-dir
-		&key force-flag title description copyright index-size
+		&key force-flag title description copyright index-size recurse
 		&aux (pictures '())
 		     (sizes '(:small :medium :large))
 		     i npics)
@@ -184,7 +186,9 @@ dest-dir       - non-existent directory for web pages
 	 (let ((info (image-info p)))
 	   (push (list p info) pictures))))
    source-dir
-   :recurse nil)
+   :recurse recurse)
+  (when (= i 0)
+    (error "There are no .jpg (or .JPG) files in ~a." source-dir))
   (setq npics i)
   (when (not *quiet*) (format t " ~d pictures~%" i))
   
