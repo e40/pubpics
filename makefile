@@ -1,6 +1,6 @@
 # $Id$
 
-on_windows = $(shell if test -d c:/; then echo yes; else echo nol fi)
+on_windows = $(shell if test -d "c:/"; then echo yes; else echo no; fi)
 
 ifeq ($(on_windows),yes)
 mlisp = "//c/Program Files/ACL60/mlisp.exe" +B +cn
@@ -18,11 +18,14 @@ install: FORCE
 ifeq ($(on_windows),yes)
 	cp -p dist/*.* c:/bin
 else
-	-mkdir /usr/local/pubpics
+	rm -fr /usr/local/pubpics
+	mkdir /usr/local/pubpics
 	cp -p dist/* /usr/local/pubpics
 	rm -f /usr/local/bin/pubpics
 	ln -s /usr/local/pubpics/pubpics /usr/local/bin/pubpics
 endif
 
-FORCE:
+clean: FORCE
+	rm -fr *.fasl dist
 
+FORCE:

@@ -1,5 +1,13 @@
 2001-01-06    <layer@relay.known.net>
 
+	* makefile: new
+	* buildit.bat: moved into makefile
+	* buildit.sh: moved into makefile
+	* example.sh: renamed to readme.txt
+	* readme.txt: new
+	* installunix.sh: moved into makefile
+	* installwin.sh: moved into makefile
+
     port to linux
 	* buildit.bat: renamed install.sh to installwin.sh
 	* buildit.cl: remove windows dependencies
