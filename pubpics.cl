@@ -641,7 +641,8 @@ dest-dir       - non-existent directory for web pages
       (merge-pathnames
        (make-pathname :type "htm")
        (if* index-size
-	  then (let ((page-number (1+ (truncate image-number index-size))))
+	  then (let ((page-number
+		      (1+ (truncate (1- image-number) index-size))))
 		 (format nil "index~a~a"
 			 suffix
 			 (if* (= page-number 1)
