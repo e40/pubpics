@@ -1,5 +1,8 @@
 ;; $Id$
 
+;; Todo:
+;; 1. add missing / to end of command line arguments
+
 (in-package :user)
 
 (eval-when (compile)
@@ -48,7 +51,8 @@
 (defun pubpics (source-dir dest-dir
 		&key force-flag title description
 		&aux (pictures '())
-		     (sizes '(:small :medium :large)))
+		     (sizes '(:small :medium :large))
+		     i npics)
   
   (when (null title) (error-die "No title!"))
   (when (null description) (error-die "No description!"))
@@ -69,14 +73,20 @@
 		 "pages/" "pages/small/" "pages/medium/" "pages/large/"))
     (ensure-directories-exist (merge-pathnames dir dest-dir)))
 
-  (format t "~%collect information on pictures...~%")
+  (when (not *quiet*)
+    (format t "~%collecting information:")
+    (force-output))
+  (setq i 0)
   (map-over-directory
    #'(lambda (p)
        (when (equalp "jpg" (pathname-type p))
+	 (incf i)
 	 (let ((info (image-info p)))
 	   (push (list p info) pictures))))
    source-dir
    :recurse nil)
+  (setq npics i)
+  (when (not *quiet*) (format t " ~d pictures~%" i))
   
   ;; Put the pictures in "numerical" order.
   (setq pictures
@@ -99,11 +109,14 @@
 		  (when (< (car x1) (car x2)) (return t))
 		  (when (> (car x1) (car x2)) (return nil)))))))
   
-  (format t "~%make html pages...~%")
+  (when (not *quiet*)
+    (format t "~%make html pages:")
+    (force-output))
   (dolist (image '("home.gif" "next.gif" "previous.gif"))
     (sys:copy-file (merge-pathnames image "sys:")
 		   (merge-pathnames image dest-dir)))
   (dolist (size sizes)
+    (when (not *quiet*) (format t " ~a" size)(force-output))
     (do* ((pictures-info pictures (cdr pictures-info))
 	  (current (car pictures-info) (car pictures-info))
 	  (prev nil picture)
@@ -119,7 +132,6 @@
 		   (merge-pathnames (format nil "pages/~a/" size)
 				    dest-dir))))
       (with-open-file (s page :direction :output)
-	(format t "   ~a...~%" (enough-namestring page dest-dir))
 	(make-page size
 		   s
 		   (format nil "../../~a/~a" size (file-namestring picture))
@@ -129,37 +141,49 @@
 		     (format nil "~a.htm" (pathname-name next)))
 		   title
 		   (remove size sizes)))))
+  (when (not *quiet*) (format t "~%"))
   
-  (format t "~%make index pages...~%")
+  (when (not *quiet*) (format t "~%make index pages:"))
   (let ((pictures (mapcar #'car pictures)))
+    (when (not *quiet*) (format t " index.htm")(force-output))
     (make-index :medium (merge-pathnames "index.htm" dest-dir)
 		pictures title description)
+    (when (not *quiet*) (format t " index_small.htm")(force-output))
     (make-index :small (merge-pathnames "index_small.htm" dest-dir)
 		pictures title description)
+    (when (not *quiet*) (format t " index_large.htm")(force-output))
     (make-index :large (merge-pathnames "index_large.htm" dest-dir)
 		pictures title description))
+  (when (not *quiet*) (format t "~%"))
   
+  (when (not *quiet*) (format t "~%generate images:~%"))
+  (setq i 1)
   (dolist (stuff pictures)
     (destructuring-bind (picture picture-info) stuff
-      (make-image :thumbnail picture-info picture
-		  (merge-pathnames (file-namestring picture)
-				   (merge-pathnames "thumbs/" dest-dir)))))
-  
-  (dolist (stuff pictures)
-    (destructuring-bind (picture picture-info) stuff
+      (when (not *quiet*)
+	(format t "  [~d of ~d] ~a:" i npics (file-namestring picture))
+	(format t " thumbnail")(force-output))
+      (make-image
+       :thumbnail picture-info picture
+       (merge-pathnames (file-namestring picture)
+			(merge-pathnames "thumbs/" dest-dir)))
+      (when (not *quiet*) (format t " large")(force-output))
       (make-image
        :large picture-info picture
        (merge-pathnames (file-namestring picture)
 			(merge-pathnames "large/" dest-dir)))
+      (when (not *quiet*) (format t " medium")(force-output))
       (make-image
        :medium picture-info picture
        (merge-pathnames (file-namestring picture)
 			(merge-pathnames "medium/" dest-dir)))
+      (when (not *quiet*) (format t " small")(force-output))
       (make-image
        :small picture-info picture
        (merge-pathnames (file-namestring picture)
 			(merge-pathnames "small/" dest-dir)))
-      (format t "~%")))
+      (when (not *quiet*) (format t "~%")))
+    (incf i))
 
   (values))
 
@@ -188,8 +212,6 @@
       (ignore-errors (close error-s)))))
 
 (defun make-image (type info from to)
-  (when (not *quiet*)
-    (format t "making ~a image from ~a...~%" type (file-namestring from)))
   (let* ((dimensions
 	  (or (cdr (assoc :dimensions info))
 	      (error-die "Could not determine dimensions of ~a." from)))
@@ -252,7 +274,7 @@
 			    (forward-slashify (namestring to))))))
 	 (status
 	  (progn
-	    ;;(when (not *quiet*) (format t "~a~%~%" convert-command))
+	    (when *debug* (format t "~a~%~%" convert-command))
 	    (run-shell-command convert-command :show-window :hide))))
     (when (/= 0 status)
       (error-die "Convert command failed on ~a with status ~d." from status))
@@ -422,7 +444,7 @@
   (setq directory (pathname-as-directory (pathname directory)))
   (when (not (probe-file directory))
     (return-from my-delete-directory-and-files-1 nil))
-  (when (not *quiet*) (format t "Removing ~a...~%" directory))
+  (when (not *quiet*) (format t "Removing ~a~%" directory))
   (let ((directories '()))
     (map-over-directory #'(lambda (p)
 			    (if* (file-directory-p p)
