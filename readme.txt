@@ -4,14 +4,17 @@ pubpics -- -t "our Xmas walk" -d "A walk in Berkeley on Xmas day"
 
 test:
 
-windows (PII 450, 256MB):
+windows (PII 450MHz, 256MB):
   commands:
     time pubpics -- -t x -d y c:/pictures/family/adrian/birth c:/tmp/testxxx
-    rm -fr c:/tmp/testxxx
   time: 7m31.018s
 
-linux (Celeron 500, 128MB):
+linux (Celeron 500Mhz, 128MB):
   commands:
     time pubpics -- -t x -d y /c/pictures/family/adrian/birth /tmp/testxxx
-    rm -fr c:/tmp/testxxx
-  time: 
+  time: 6m56.37s
+
+linux (Athlon 1.0GHz, 256MB):
+  commands:
+    time pubpics -- -t x -d y /c/pictures/family/adrian/birth /tmp/testxxx
+  time: 6m56.37s

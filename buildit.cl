@@ -39,9 +39,12 @@
 #+mswindows
 (progn
   (delete-file "dist/pubpics.exe")
-  (sys:copy-file "c:/Program files/ACL60/buildi.exe" "dist/pubpics.exe"))
+  (sys:copy-file "sys:buildi.exe" "dist/pubpics.exe"))
+
+#-mswindows
+(with-open-file (s "dist/lisprc" :direction :output)
+  (format s ".command-line: --~%"))
 
 (sys:copy-file "home.gif" "dist/home.gif")
 (sys:copy-file "next.gif" "dist/next.gif")
 (sys:copy-file "previous.gif" "dist/previous.gif")
-
