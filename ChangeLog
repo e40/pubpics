@@ -1,7 +1,10 @@
 2004-05-17  Kevin Layer  <layer@relay.known.net>
 
 	* buildit.cl: load :trace, for -D
-	* pubpics.cl: image magik stuff in /usr/bin/; add -D
+	* pubpics.cl:
+	- image magik stuff in /usr/bin/
+	- add -D
+	- fix beyond end of sequence error with new subseq
 	* readme.txt: fix typo
 
 2003-02-26  Kevin Layer  <layer@relay.known.net>

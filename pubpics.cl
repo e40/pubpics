@@ -654,7 +654,7 @@ dest-dir       - non-existent directory for web pages
   ;; SECTION-INDEX subsequence of list elements.
   (let* ((start (* (1- section-index) section-size))
 	 (end (+ start section-size)))
-    (subseq list start end)))
+    (subseq list start (min end (length list)))))
 
 (defun chop-list (list n)
   (do* ((l list (cdr l))
