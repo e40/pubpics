@@ -1,3 +1,8 @@
+2001-01-10    <layer@relay.known.net>
+
+	* pubpics.cl: fix ^C on linux (whew, what a pain in the ass);
+	remove error-die because it is completely useless
+
 2001-01-07    <layer@OOB>
 
 	* buildit.cl: create pubpics.rc in dist/; break on warnings during

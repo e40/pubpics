@@ -50,6 +50,10 @@ dest-dir -- non-existent directory for web pages
 (defvar *cleanup-forms* nil)
 
 (defun pubpics-init-function ()
+  ;; The following makes run-shell-command interruptable.  Why, I have no
+  ;; idea.  It appears that /bin/csh fixes something in how our signal
+  ;; handling works.
+  #+linux (setf (sys:getenv "SHELL") "/bin/csh")
   (handler-case
       (sys:with-command-line-arguments
 	  ("d:I:fqt:V"
@@ -60,36 +64,34 @@ dest-dir -- non-existent directory for web pages
 	(when print-version-and-exit
 	  (format t "pubpics: ~a~%" *version*)
 	  (exit 0 :quiet t))
-	(when (/= 2 (length rest)) (error-die *usage*))
+	(when (/= 2 (length rest)) (error *usage*))
 	(pubpics (first rest) (second rest) :force-flag force-flag
 		 :title title :description description)
 	(exit 0 :quiet t))
-    (excl::asynchronous-operating-system-signal (c)
+    (error (c)
       (dolist (form *cleanup-forms*)
 	(funcall form c))
-      (exit 1 :quiet t))
-    (error (c) (error-die "An error occurred: ~a." c))))
+      (exit 1 :quiet t))))
 
 (defun pubpics (source-dir dest-dir
 		&key force-flag title description
 		&aux (pictures '())
 		     (sizes '(:small :medium :large))
 		     i npics)
-  
   (setq source-dir (pathname-as-directory (pathname source-dir)))
   (setq dest-dir (pathname-as-directory (pathname dest-dir)))
   
   (when (not (probe-file source-dir))
-    (error-die "~a does not exist." source-dir))
+    (error "~a does not exist." source-dir))
 
   ;; Make sure dest-dir doesn't exist, and remove it if it does and
   ;; force-flag is non-nil.
   (when (probe-file dest-dir)
     (if* force-flag
        then (when (not (file-directory-p dest-dir))
-	      (error-die "~a is not a directory." dest-dir))
+	      (error "~a is not a directory." dest-dir))
 	    (my-delete-directory-and-files dest-dir)
-       else (error-die "~a already exists." dest-dir)))
+       else (error "~a already exists." dest-dir)))
 
   (when (null title)
     (setq title (car (last (pathname-directory source-dir)))))
@@ -106,12 +108,20 @@ dest-dir -- non-existent directory for web pages
 		      month)
 		year))))
 
-  (push #'(lambda (condition)
-	    (format t "~&~a~%Cleaning up...~%" condition)
+  (let ((cleanup-form
+	 #'(lambda (&optional condition)
+	    (format t "~&~@[~a~%~]Cleaning up...~%" condition)
 	    (force-output)
 	    (when (probe-file dest-dir)
-	      (my-delete-directory-and-files dest-dir)))
-	*cleanup-forms*)
+	      (my-delete-directory-and-files dest-dir)))))
+    (push cleanup-form *cleanup-forms*)
+    (add-signal-handler
+     2
+     #'(lambda (sig cont)
+	 (format t "In SIGINT cleanup handler...~%")
+	 (force-output)
+	 (dolist (form *cleanup-forms*) (funcall form))
+	 (excl::sig-handler-exit sig cont))))
 
   (dolist (dir '("large/" "medium/" "small/" "thumbs/"
 		 "pages/" "pages/small/" "pages/medium/" "pages/large/"))
@@ -240,7 +250,7 @@ dest-dir -- non-existent directory for web pages
 (defun make-image (type info from to)
   (let* ((dimensions
 	  (or (cdr (assoc :dimensions info))
-	      (error-die "Could not determine dimensions of ~a." from)))
+	      (error "Could not determine dimensions of ~a." from)))
 	 (convert-command
 	  (if* (eq :large type)
 	     then ;; Only put a copyright notice on the large one, since
@@ -308,7 +318,8 @@ dest-dir -- non-existent directory for web pages
 	    (when *debug* (format t "~a~%~%" convert-command))
 	    (run-shell-command convert-command :show-window :hide))))
     (when (/= 0 status)
-      (error-die "Convert command failed on ~a with status ~d." from status))
+      (error "Convert command failed on ~a with status ~d."
+	     (file-namestring from) status))
     t))
 
 (defun make-page (size s image previous-page next-page title other-sizes)
@@ -427,14 +438,6 @@ dest-dir -- non-existent directory for web pages
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; utils which should be in allegro?????
 
-(defun error-die (format &rest args)
-  (if* *debug*
-     then (apply #'break format args)
-     else (apply #'format t format args)
-	  (format t "~%")
-	  (force-output)
-	  (exit 0 :no-unwind t :quiet t)))
-
 (defun my-read-line (stream &optional terminate-on-space)
   (let ((term-chars
 	 `(#\return #\newline ,@(when terminate-on-space '(#\space))))
@@ -468,13 +471,9 @@ dest-dir -- non-existent directory for web pages
       (push line lines))))
 
 (defun my-delete-directory-and-files (directory)
-  (handler-case (my-delete-directory-and-files-1 directory)
-    (error (c) (error-die "~a: ~a" directory c))))
-
-(defun my-delete-directory-and-files-1 (directory)
   (setq directory (pathname-as-directory (pathname directory)))
   (when (not (probe-file directory))
-    (return-from my-delete-directory-and-files-1 nil))
+    (return-from my-delete-directory-and-files nil))
   (when (not *quiet*) (format t "Removing ~a~%" directory))
   (let ((directories '()))
     (map-over-directory #'(lambda (p)
