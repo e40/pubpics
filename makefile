@@ -48,7 +48,7 @@ dist:	FORCE
 	rm -fr pubpics-$(dist-version)
 
 clean: FORCE
-	rm -fr *.fasl pubpics *.gz *.bz2 */*.fasl
+	rm -fr *.fasl pubpics testout *.gz *.bz2 */*.fasl
 
 test: FORCE
 	rm -fr testout
