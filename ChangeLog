@@ -1,3 +1,9 @@
+2001-03-22    <layer@relay.known.net>
+
+	* pubpics.cl:
+	- handle pictures not named like we expect
+	- run-shell-command scheduler (turned off)
+
 2001-02-17    <layer@killspam.known.net>
 
 	* pubpics.cl: fix usage; add -size argument, for speed; get

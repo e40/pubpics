@@ -3,6 +3,8 @@
 (in-package :user)
 
 (eval-when (compile)
+  ;;(push :rsc-scheduler *features*)
+  
   (compile-file-if-needed
    (or (probe-file "exif-utils/exifdump.cl")
        #+mswindows (probe-file "c:/src/exif-utils/exifdump.cl")
@@ -65,8 +67,10 @@ dest-dir -- non-existent directory for web pages
 	  (format t "pubpics: ~a~%" *version*)
 	  (exit 0 :quiet t))
 	(when (/= 2 (length rest)) (error *usage*))
+	#+rsc-scheduler (setq *quiet* t)
 	(pubpics (first rest) (second rest) :force-flag force-flag
 		 :title title :description description)
+	#+rsc-scheduler (rsc-finalize)
 	(exit 0 :quiet t))
     (error (c)
       (format t "~a" c)
@@ -145,24 +149,29 @@ dest-dir -- non-existent directory for web pages
   
   ;; Put the pictures in "numerical" order.
   (setq pictures
-    (sort pictures
-	  #'(lambda (item1 item2)
-	      ;; return true, iff item1 < item2
-	      (let* ((item1
-		      (mapcar #'read-from-string
-			      (delimited-string-to-list
-			       (pathname-name (car item1))
-			       "-")))
-		     (item2
-		      (mapcar #'read-from-string
-			      (delimited-string-to-list
-			       (pathname-name (car item2))
-			       "-"))))
-		(do* ((x1 item1 (cdr x1))
-		      (x2 item2 (cdr x2)))
-		    ((or (null x1) (null x2)) nil)
-		  (when (< (car x1) (car x2)) (return t))
-		  (when (> (car x1) (car x2)) (return nil)))))))
+    (handler-case
+	(sort (copy-list pictures)
+	      #'(lambda (item1 item2)
+		  ;; return true, iff item1 < item2
+		  (let* ((item1
+			  (mapcar #'read-from-string
+				  (delimited-string-to-list
+				   (pathname-name (car item1))
+				   "-")))
+			 (item2
+			  (mapcar #'read-from-string
+				  (delimited-string-to-list
+				   (pathname-name (car item2))
+				   "-"))))
+		    (do* ((x1 item1 (cdr x1))
+			  (x2 item2 (cdr x2)))
+			((or (null x1) (null x2)) nil)
+		      (when (< (car x1) (car x2)) (return t))
+		      (when (> (car x1) (car x2)) (return nil))))))
+      (error ()
+	;; they might not have the new names, so don't sort if an error
+	;; occurs.
+	pictures)))
   
   (when (not *quiet*)
     (format t "~%make html pages:")
@@ -319,7 +328,12 @@ dest-dir -- non-existent directory for web pages
 	 (status
 	  (progn
 	    (when *debug* (format t "~a~%~%" convert-command))
+	    #+rsc-scheduler (rsc-scheduler convert-command)
+	    #-rsc-scheduler
 	    (run-shell-command convert-command :show-window :hide))))
+    #+rsc-scheduler
+    status
+    #-rsc-scheduler
     (when (/= 0 status)
       (error "Convert command failed on ~a with status ~d."
 	     (file-namestring from) status))
@@ -524,3 +538,88 @@ dest-dir -- non-existent directory for web pages
 
 (defun forward-slashify (string)
   (substitute #\/ #\\ string)) 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defparameter *rsc-number-of-processors* 3)
+
+(defparameter *rsc-status*
+    ;; nil or (status . command)
+    nil)
+
+(defparameter *rsc-procs* nil)
+
+(defun rsc-scheduler (command)
+  (when (null *rsc-procs*) (rsc-initialize-processors))
+  
+  (mp:without-scheduling
+    (let ((p (pop *rsc-procs*)))
+      (setq *rsc-procs* (append *rsc-procs* (list p)))
+      (push command (getf (mp:process-property-list p) :rsc-queue)))))
+
+(defun rsc-initialize-processors ()
+  (setq *rsc-procs* nil)
+  (setq *rsc-status* nil)
+  (dotimes (i *rsc-number-of-processors*)
+    (push
+     (mp:process-run-function (format nil "rsc processor ~d" i)
+			      #'rsc-process-queue)
+     *rsc-procs*)))
+
+(defun rsc-process-queue (&aux (p mp:*current-process*))
+  ;; our queue is stored on our plist
+  (loop
+    (mp:process-wait
+     "waiting for something to do"
+     (lambda ()
+       (or *rsc-status*
+	   (getf (mp:process-property-list p) :rsc-queue))))
+
+    (when *rsc-status*
+      (mp:process-kill p)
+      (sleep 100000))
+
+    (let* ((command (pop (getf (mp:process-property-list p) :rsc-queue)))
+	   status)
+      (when (eq :die command)
+	(mp:process-kill p)
+	(sleep 100000))
+      (multiple-value-bind (ignore1 ignore2 pid)
+	  (run-shell-command command :show-window :hide :wait nil)
+	(declare (ignore ignore1 ignore2))
+	(format t "~a: ~a~%" (mp:process-name p) command)
+	(mp:process-wait
+	 (format nil "waiting for pid ~d to finish" pid)
+	 (lambda (pid)
+	   (multiple-value-bind (exit-status xpid)
+	       (sys:reap-os-subprocess :wait nil :pid pid)
+	     (if* (not (eql pid xpid))
+		then ;; something is wrong, the process isn't running
+		     (setq status (or exit-status -1))
+		     t
+	      elseif exit-status
+		then ;; process finished
+		     (setq status exit-status)
+		     t
+		else ;; still running
+		     nil)))
+	 pid)
+	(when (/= 0 status) (setq *rsc-status* (cons status command)))))))
+
+(defun rsc-finalize ()
+  (mp:without-scheduling
+    (dolist (p *rsc-procs*)
+      (setf (getf (mp:process-property-list p) :rsc-queue)
+	(append (getf (mp:process-property-list p) :rsc-queue)
+		(list :die)))))
+  (mp:process-wait
+   "waiting for rsc processors to finish"
+   (lambda ()
+     (dolist (p *rsc-procs* t)
+       (when (mp:process-active-p p) (return nil)))))
+  (if* *rsc-status*
+     then (format t "Error command ~s exited with status ~d."
+		  (cdr *rsc-status*) (car *rsc-status*))
+	  nil
+     else t)
+  (setq *rsc-procs* nil))
