@@ -26,9 +26,8 @@
 (defvar *debug* nil)
 (defvar *usage*
     "Usage: [-V] [-n] [-q] -t title -d description source-dir dest-dir~%")
-(defvar *image-magick-root*
-    ;; The Image Magick 5.26 directory:
-    "c:/im526/")
+
+(defvar *image-magick-root* "c:/ImageMagick/")
 
 (defvar *large-divisor* 1.5)
 (defvar *medium-divisor* 2)
