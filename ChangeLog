@@ -1,5 +1,10 @@
-2002-12-04  Kevin Layer  <layer@relay.known.net>
+2003-02-26  Kevin Layer  <layer@relay.known.net>
 ***1.25 released***
+
+	* makefile: add readme to DIST dir
+	* readme.txt: update
+
+2002-12-04  Kevin Layer  <layer@relay.known.net>
 
 	* makefile: have all do a `clean' first
 	* pubpics.cl: put under LLGPL
