@@ -1,7 +1,10 @@
 2002-12-04  Kevin Layer  <layer@relay.known.net>
+***1.24 released***
 
 	* makefile: have all do a `clean' first
 	* pubpics.cl: put under LLGPL
+	* readme.txt: finally some user documentation!
+	* (NEW) notes.txt: previous contents of readme.txt
 
 2002-10-16  Kevin Layer  <layer@relay.known.net>
 

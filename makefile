@@ -30,9 +30,10 @@ else
 	ln -s /usr/local/pubpics/pubpics /usr/local/bin/pubpics
 endif
 
-dist-files = ChangeLog *.cl exif-utils/*.cl *.gif makefile
 dist-version = \
  $(shell grep Revision: pubpics.cl | sed 's/.*Revision: \([0-9.]*\).*/\1/')
+
+dist_src_files = readme.txt ChangeLog *.cl exif-utils/*.cl *.gif makefile
 
 dist-tar = pubpics-$(dist-version)-linux-glibc-2.1.tar
 dist-gz = $(dist-tar).gz
@@ -46,7 +47,7 @@ dist:	FORCE
 	gzip -c9 < $(dist-tar) > $(dist-gz)
 	bzip2 -c9 < $(dist-tar) > $(dist-bz2)
 	rm -f $(dist-tar)
-	tar zcf $(dist-src) $(dist-files)
+	tar zcf $(dist-src) $(dist_src_files)
 	rm -fr pubpics-$(dist-version)
 
 clean: FORCE

@@ -7,22 +7,7 @@
 ;; (http://opensource.franz.com/preamble.html),
 ;; known as the LLGPL.
 ;;
-;; What exactly does it do?  It takes as input a set of jpg's from a
-;; digital camera and produces nice looking web pages, with index pages
-;; containing thumbnails.  The original digital pictures are resized into
-;; three sets of pictures, allowing viewers to sequentially or randomly
-;; browse in any size.  The largest images can optionally have a copyright
-;; notice added to them.
-;;
-;; Required software:
-;;
-;; - Allegro CL 6.2 Enterprise.  See http://www.franz.com.
-;;
-;; - ImageMagick.  Version 5.2.7 used on Linux and version 5.4.9 on
-;;   Windows.  Other later versions probably work, but I'm pretty
-;;   sure ones earlier than 5.2.7 have problems.  See
-;;   http://www.imagemagick.org for more information.
-;;
+;; See readme.txt for more information.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; $Id$
 
