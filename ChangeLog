@@ -1,3 +1,10 @@
+2002-05-14  Kevin Layer  <layer@relay.known.net>
+
+	* buildit.cl: remove :include-common-graphics keyword
+	* makefile: beef up `clean'
+	* pubpics.cl: add -p (pause after completion); path fixes; minor
+	fix to page generation
+
 2001-06-05    <layer@relay.known.net>
 ***1.17 released***
 

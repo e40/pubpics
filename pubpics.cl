@@ -61,26 +61,27 @@
 (defvar *debug* nil)
 (defvar *usage*
     "~
-Usage: [-c name] [-n size] [-V] [-q] [-t title] [-d description]
+Usage: [-p] [-c name] [-n size] [-V] [-q] [-t title] [-d description]
        source-dir dest-dir
 -c name        - for the largest image size, add copyright in a border for
                  `name' 
+-d description - addition information for the index page
 -n size        - max number of images on each index page--probably should
                  be a multiple of 3, since there are three thumbnails per
                  row on each index page
+-p             - pause after completion
 -V             - print version info and exit
 -q             - quiet mode--do not print informative messages
 -r             - recurse on source-dir
 -t title       - set title of generated pages to `title', and use this
                  title at the top of each photo page
--d description - addition information for the index page
 source-dir     - directory containing images
 dest-dir       - non-existent directory for web pages
 ")
 
 (defvar *image-magick-root*
     #+mswindows "c:/ImageMagick/"
-    #-mswindows "/usr/local/bin/")
+    #-mswindows "/usr/bin/X11/")
 
 (defvar *large-divisor* 1.5 "How much `large' images are scaled down.")
 (defvar *medium-divisor* 2  "How much `medium' images are scaled down.")
@@ -94,9 +95,9 @@ dest-dir       - non-existent directory for web pages
   #+linux (setf (sys:getenv "SHELL") "/bin/csh")
   (flet ((doit ()
 	   (sys:with-command-line-arguments
-	       ("c:d:fI:n:qrt:V"
+	       ("c:d:fI:n:pqrt:V"
 		copyright description force-flag image-file index-size
-		*quiet* recurse title print-version-and-exit)
+		pause *quiet* recurse title print-version-and-exit)
 	       (rest)
 	     (declare (ignore image-file))
 	     (when print-version-and-exit
@@ -111,6 +112,10 @@ dest-dir       - non-existent directory for web pages
 		      :index-size (when index-size
 				    (read-from-string index-size)))
 	     #+rsc-scheduler (rsc-finalize)
+	     (when pause
+	       (format t "hit ENTER to continue:")
+	       (force-output)
+	       (read-line))
 	     (exit 0 :quiet t))))
     #+debug-pubpics (doit)
     #-debug-pubpics
@@ -576,7 +581,7 @@ dest-dir       - non-existent directory for web pages
 		else (format nil "~a~a" index-name page))
 	     (make-pathname :type "htm"))
 	    dest-dir)))
-      (if* index-size
+      (if* (and index-size (> n-pages 1))
 	 then (do* ((indicies
 		     (do* ((res '())
 			   (page n-pages (1- page)))
@@ -588,8 +593,10 @@ dest-dir       - non-existent directory for web pages
 		    (prev-index nil index)
 		    (index #1=(index index-name page dest-dir)
 			   #1#)
-		    (next-index #2=(index index-name (1+ page) dest-dir)
-				(when (< page n-pages) #2#)))
+		    (next-index
+		     #2=(when (< page n-pages)
+			  (index index-name (1+ page) dest-dir))
+		     #2#))
 		  ((> page n-pages))
 		(with-open-file (s index :direction :output)
 		  (gen-index s size title description

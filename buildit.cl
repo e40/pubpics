@@ -24,7 +24,6 @@
  :record-xref-info nil
  :record-source-file-info nil
  :exit-after-image-build t
- :include-common-graphics nil
  :include-devel-env nil
  :include-tpl nil
  :newspace 6144
