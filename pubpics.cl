@@ -19,11 +19,13 @@
 (setq excl::*force-quiet-exit* t) ; 6.0
 (setq sys::.ignore-command-line-arguments. t)
 
+(defvar *version* "$Revision$")
+
 (defvar *quiet* nil)
 (defvar *no-execute* nil)
 (defvar *debug* nil)
 (defvar *usage*
-    "Usage: [-n] [-q] -t title -d description source-dir dest-dir~%")
+    "Usage: [-V] [-n] [-q] -t title -d description source-dir dest-dir~%")
 (defvar *image-magick-root*
     ;; The Image Magick 5.26 directory:
     "c:/im526/")
@@ -35,10 +37,14 @@
 (defun pubpics-init-function ()
   (handler-case
       (sys:with-command-line-arguments
-	  ("d:I:fnqt:"
-	   description image-file force-flag *no-execute* *quiet* title)
+	  ("d:I:fnqt:V"
+	   description image-file force-flag *no-execute* *quiet* title
+	   print-version-and-exit)
 	  (rest)
 	(declare (ignore image-file))
+	(when print-version-and-exit
+	  (format t "pubpics: ~a~%" *version*)
+	  (exit 0 :quiet t))
 	(when (/= 2 (length rest)) (error-die *usage*))
 	(pubpics (first rest) (second rest) :force-flag force-flag
 		 :title title :description description)
