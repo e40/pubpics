@@ -31,10 +31,12 @@
 (defvar *quiet* nil)
 (defvar *debug* nil)
 (defvar *usage*
-    "Usage: [-V] [-q] [-t title] [-d description] source-dir dest-dir
+    "Usage: [-c name] [-V] [-q] [-t title] [-d description] source-dir dest-dir
+-c name -- for the largest image size, add copyright in a border for `name'
+-n size -- max number of images on each index page
 -V -- print version info and exit
 -q -- quiet mode (do not print informative messages)
--t title -- set title of generated pages to 'title', and use this title
+-t title -- set title of generated pages to `title', and use this title
    at the top of each photo page
 -d description -- addition information for the index page
 source-dir -- directory containing images
@@ -58,8 +60,9 @@ dest-dir -- non-existent directory for web pages
   #+linux (setf (sys:getenv "SHELL") "/bin/csh")
   (handler-case
       (sys:with-command-line-arguments
-	  ("cd:I:fqt:V"
-	   copyright description image-file force-flag *quiet* title
+	  ("c:d:fI:nqt:V"
+	   copyright description force-flag image-file index-size
+	   *quiet* title
 	   print-version-and-exit)
 	  (rest)
 	(declare (ignore image-file))
@@ -70,7 +73,8 @@ dest-dir -- non-existent directory for web pages
 	#+rsc-scheduler (setq *quiet* t)
 	(pubpics (first rest) (second rest) :force-flag force-flag
 		 :title title :description description
-		 :copyright copyright)
+		 :copyright copyright
+		 :index-size index-size)
 	#+rsc-scheduler (rsc-finalize)
 	(exit 0 :quiet t))
     (error (c)
@@ -80,7 +84,7 @@ dest-dir -- non-existent directory for web pages
       (exit 1 :quiet t))))
 
 (defun pubpics (source-dir dest-dir
-		&key force-flag title description copyright
+		&key force-flag title description copyright index-size
 		&aux (pictures '())
 		     (sizes '(:small :medium :large))
 		     i npics)
@@ -178,8 +182,11 @@ dest-dir -- non-existent directory for web pages
     (format t "~%make html pages:")
     (force-output))
   (dolist (image '("home.gif" "next.gif" "previous.gif"))
-    (sys:copy-file (merge-pathnames image "sys:")
-		   (merge-pathnames image dest-dir)))
+    (sys:copy-file
+     (if* (probe-file image)
+	thenret
+	else (merge-pathnames image "sys:"))
+     (merge-pathnames image dest-dir)))
   (dolist (size sizes)
     (when (not *quiet*) (format t " ~a" size)(force-output))
     (do* ((pictures-info pictures (cdr pictures-info))
@@ -188,6 +195,7 @@ dest-dir -- non-existent directory for web pages
 	  (picture (car current) (car current))
 	  (next #1=(caar (cdr pictures-info)) #1#)
 	  (htm (make-pathname :type "htm"))
+	  (image-number 1 (1+ image-number))
 	  page)
 	((null picture))
       (setq page (merge-pathnames
@@ -200,10 +208,10 @@ dest-dir -- non-existent directory for web pages
 	(make-page size
 		   s
 		   (format nil "../../~a/~a" size (file-namestring picture))
-		   (when prev
-		     (format nil "~a.htm" (pathname-name prev)))
-		   (when next
-		     (format nil "~a.htm" (pathname-name next)))
+		   image-number
+		   index-size
+		   (when prev (format nil "~a.htm" (pathname-name prev)))
+		   (when next (format nil "~a.htm" (pathname-name next)))
 		   title
 		   (remove size sizes)))))
   (when (not *quiet*) (format t "~%"))
@@ -211,14 +219,14 @@ dest-dir -- non-existent directory for web pages
   (when (not *quiet*) (format t "~%make index pages:"))
   (let ((pictures (mapcar #'car pictures)))
     (when (not *quiet*) (format t " index.htm")(force-output))
-    (make-index :medium (merge-pathnames "index.htm" dest-dir)
-		pictures title description)
+    (make-index :medium "index" dest-dir
+		pictures title description index-size)
     (when (not *quiet*) (format t " index_small.htm")(force-output))
-    (make-index :small (merge-pathnames "index_small.htm" dest-dir)
-		pictures title description)
+    (make-index :small "index_small" dest-dir
+		pictures title description index-size)
     (when (not *quiet*) (format t " index_large.htm")(force-output))
-    (make-index :large (merge-pathnames "index_large.htm" dest-dir)
-		pictures title description))
+    (make-index :large "index_large" dest-dir
+		pictures title description index-size))
   (when (not *quiet*) (format t "~%"))
   
   (when (not *quiet*) (format t "~%generate images:~%"))
@@ -288,11 +296,12 @@ dest-dir -- non-existent directory for web pages
      -pointsize 12 ~
      -fill white ~
      -font ~a ~
-     -draw \"text 3,9 '~a 2000 D. Kevin Layer'\" "
+     -draw \"text 3,9 '~a 2000 ~a'\" "
 			 #+mswindows "C:/Winnt/fonts/arialbd.ttf"
 			 #-mswindows "arialbd"
 			 #+mswindows "\\0x00a9" ;; Unicode copyright symbol
-			 #-mswindows "Copyright"))
+			 #-mswindows "Copyright"
+			 copyright))
 		      (format s "\"~a\" \"~a\""
 			      (forward-slashify (namestring from))
 			      (forward-slashify (namestring to)))))
@@ -345,7 +354,8 @@ dest-dir -- non-existent directory for web pages
 	     (file-namestring from) status))
     t))
 
-(defun make-page (size s image previous-page next-page title other-sizes)
+(defun make-page (size s image image-number index-size previous-page
+		  next-page title other-sizes)
   (html-stream
    s
    (:head (:title (:princ-safe (file-namestring image))))
@@ -380,11 +390,11 @@ dest-dir -- non-existent directory for web pages
 	:newline
 	((:td :width "80" :align "center")
 	 :newline
-	 ((:a :href (format nil "../../index~a.htm"
-			    (case size
-			      (:small "_small")
-			      (:medium "")
-			      (:large "_large"))))
+	 ((:a :href
+	      (namestring
+	       (merge-pathnames
+		(page-number-to-index image-number index-size size)
+		"../../")))
 	  ((:img :src "../../home.gif" :height "30" :width "30"
 		 :border "0" :alt "Home"))))
 	:newline
@@ -396,7 +406,7 @@ dest-dir -- non-existent directory for web pages
 	     :newline
 	     ((:img :src "../../next.gif" :height "30" :width "30"
 		    :border "0" :alt "Next"))))))))))
-    
+    :newline
     (:p
      (:center
       ((:img :src image :border "0" :alt (file-namestring image)))))
@@ -407,33 +417,132 @@ dest-dir -- non-existent directory for web pages
 	 (:princ-safe (format nil "A ~a image." size)))
 	:br))))))
 
-(defun make-index (size index pictures title description)
-  (with-open-file (s index :direction :output)
-    (html-stream
-     s
-     (:head
-      :newline
-      (:title (:princ-safe title))
-      :newline
-      ((:body :bgcolor "#ffffff" :link "#ff0000" :vlink "#52188C")
-       :newline
-       ((:table :border "0" :cellpadding "5" :cellspacing "2"
-		:width "100%" :bgcolor "#f0f0f0")
-	:newline
-	(:tr
-	 :newline
-	 (:td
-	  :newline
-	  (:h2 (:princ-safe title))
-	  :newline
-	  (:p (:princ-safe description)))))
-       :newline
-       (:center
-	:newline
-	((:table :cellspacing 10 :cellpadding 0 :border 0)
-	 :newline
-	 (dolist (row (chop-list pictures 3))
-	   (make-index-row size row)))))))))
+(defun page-number-to-index (image-number index-size size)
+  (let ((page-number (1+ (truncate image-number index-size))))
+    (namestring
+     (merge-pathnames
+      (make-pathname :type "htm")
+      (format nil "index~a~a"
+	      (case size
+		(:small "_small")
+		(:medium "")
+		(:large "_large"))
+	      (if* (= page-number 1)
+		 then ""
+		 else page-number))))))
+
+(defun make-index (size index-name dest-dir pictures title description
+		   index-size)
+  (let* ((n-pictures (length pictures))
+	 (n-pages (ceiling n-pictures index-size)))
+    (flet
+	((gen-index (s size title description pictures indicies
+		     &optional prev-index next-index)
+	   (html-stream
+	    s
+	    (:head
+	     :newline
+	     (:title (:princ-safe title))
+	     :newline
+	     ((:body :bgcolor "#ffffff" :link "#ff0000" :vlink "#52188C")
+	      :newline
+	      ((:table :border "0" :cellpadding "5" :cellspacing "2"
+		       :width "100%" :bgcolor "#f0f0f0")
+	       :newline
+	       (:tr
+		:newline
+		(:td
+		 :newline
+		 (:h2 (:princ-safe title))
+		 :newline
+		 (:p (:princ-safe description)))))
+	      :newline
+;;;; the index buttons:
+	      (:p
+	       :newline
+	       (:center
+		:newline
+		((:table :border "0" :cellpadding "0" :cellspacing "2")
+		 :newline
+		 (:tr
+		  :newline
+		  ((:td :colspan "2" :align "center")
+		   (do* ((index indicies (cdr index))
+			 (i 1 (1+ i)))
+		       ((null index))
+		     (html ((:a :href (car index)) (:princ i)))
+		     (when (cdr index)
+		       (html " | ")))))
+		 :newline
+		 (:tr
+		  :newline
+		  (if* prev-index
+		     then (html
+			   ((:td :align "right"  :width "50%")
+			    :newline
+			    ((:a :href (file-namestring prev-index))
+			     ((:img :src "previous.gif"
+				    :height "30" :width "30"
+				    :border "0"
+				    :alt "Previous index page")))))
+		     else (html ((:td :width "50%") " ")))
+		  :newline
+		  (if* next-index
+		     then (html
+			   ((:td :align "left"  :width "50%")
+			    :newline
+			    ((:a :href (file-namestring next-index))
+			     :newline
+			     ((:img :src "next.gif" :height "30" :width "30"
+				    :border "0" :alt "Next index page")))))
+		     else (html ((:td :width "50%") " ")))))))
+	     
+;;;; the thumbnails:
+	      :newline
+	      (:center
+	       :newline
+	       ((:table :cellspacing 10 :cellpadding 0 :border 0)
+		:newline
+		(dolist (row (chop-list pictures 3))
+		  (make-index-row size row))))))))
+	 (index (index-name page dest-dir)
+	   (merge-pathnames
+	    (merge-pathnames
+	     (if* (= page 1)
+		then index-name
+		else (format nil "~a~a" index-name page))
+	     (make-pathname :type "htm"))
+	    dest-dir)))
+      (if* index-size
+	 then (do* ((indicies
+		     (do* ((res '())
+			   (page n-pages (1- page)))
+			 ((= page 0) res)
+		       (push (file-namestring
+			      (index index-name page dest-dir))
+			     res)))
+		    (page 1 (1+ page))
+		    (prev-index nil index)
+		    (index #1=(index index-name page dest-dir)
+			   #1#)
+		    (next-index #2=(index index-name (1+ page) dest-dir)
+				(when (< page n-pages) #2#)))
+		  ((> page n-pages))
+		(with-open-file (s index :direction :output)
+		  (gen-index s size title description
+			     (list-section pictures page index-size)
+			     indicies
+			     prev-index next-index)))
+	 else (with-open-file (s (index index-name 1 dest-dir)
+			       :direction :output)
+		(gen-index s size title description pictures))))))
+
+(defun list-section (list section-index section-size)
+  ;; LIST is composed of SECTION-SIZE segments of elements.  Return the
+  ;; SECTION-INDEX subsequence of list elements.
+  (let* ((start (* (1- section-index) section-size))
+	 (end (+ start section-size)))
+    (subseq list start end)))
 
 (defun make-index-row (size pictures)
   (html

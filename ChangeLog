@@ -1,3 +1,7 @@
+2001-04-18    <layer@relay.known.net>
+
+	* pubpics.cl: add -n and have -c take an argument
+
 2001-04-02    <layer@relay.known.net>
 
 	* pubpics.cl: add -c for copyright
