@@ -489,10 +489,10 @@ dest-dir       - non-existent directory for web pages
 	(:princ-safe (format nil "~a (~a) " title (file-namestring image)))
 	
 	(dolist (size other-sizes)
-	 (html
-	  ((:a :href (format nil "../~a/~a.htm" size (pathname-name image)))
+	  (html
 	   " / "
-	   (:princ-safe (format nil "~a image" size)))))))))
+	   ((:a :href (format nil "../~a/~a.htm" size (pathname-name image)))
+	    (:princ-safe (format nil "~a image" size)))))))))
     :newline
     (:center
      :newline
