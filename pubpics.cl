@@ -27,10 +27,17 @@
 (defvar *version* "$Revision$")
 
 (defvar *quiet* nil)
-(defvar *no-execute* nil)
 (defvar *debug* nil)
 (defvar *usage*
-    "Usage: [-V] [-n] [-q] -t title -d description source-dir dest-dir~%")
+    "Usage: [-V] [-q] [-t title] [-d description] source-dir dest-dir
+-V -- print version info and exit
+-q -- quiet mode (do not print informative messages)
+-t title -- set title of generated pages to 'title', and use this title
+   at the top of each photo page
+-t description -- addition information for the index page
+source-dir -- directory containing images
+dest-dir -- non-existent directory for web pages
+")
 
 (defvar *image-magick-root*
     #+mswindows "c:/ImageMagick/"
@@ -40,11 +47,13 @@
 (defvar *medium-divisor* 2)
 (defvar *small-divisor* 3)
 
+(defvar *cleanup-forms* nil)
+
 (defun pubpics-init-function ()
   (handler-case
       (sys:with-command-line-arguments
-	  ("d:I:fnqt:V"
-	   description image-file force-flag *no-execute* *quiet* title
+	  ("d:I:fqt:V"
+	   description image-file force-flag *quiet* title
 	   print-version-and-exit)
 	  (rest)
 	(declare (ignore image-file))
@@ -55,6 +64,10 @@
 	(pubpics (first rest) (second rest) :force-flag force-flag
 		 :title title :description description)
 	(exit 0 :quiet t))
+    (excl::asynchronous-operating-system-signal (c)
+      (dolist (form *cleanup-forms*)
+	(funcall form c))
+      (exit 1 :quiet t))
     (error (c) (error-die "An error occurred: ~a." c))))
 
 (defun pubpics (source-dir dest-dir
@@ -65,9 +78,6 @@
   
   (setq source-dir (pathname-as-directory (pathname source-dir)))
   (setq dest-dir (pathname-as-directory (pathname dest-dir)))
-  
-  (when (null title) (error-die "No title!"))
-  (when (null description) (error-die "No description!"))
   
   (when (not (probe-file source-dir))
     (error-die "~a does not exist." source-dir))
@@ -80,6 +90,28 @@
 	      (error-die "~a is not a directory." dest-dir))
 	    (my-delete-directory-and-files dest-dir)
        else (error-die "~a already exists." dest-dir)))
+
+  (when (null title)
+    (setq title (car (last (pathname-directory source-dir)))))
+
+  (when (null description)
+    (setq description
+      (multiple-value-bind (second minute hour day month year)
+	  (decode-universal-time (file-write-date source-dir))
+	(declare (ignore second minute hour))
+	(format nil "~d~a~d"
+		day
+		(aref #(0 "Jan" "Feb" "Mar" "Apr" "May" "Jun" "Jul" "Aug"
+			"Sep" "Oct" "Nov" "Dec")
+		      month)
+		year))))
+
+  (push #'(lambda (condition)
+	    (format t "~&~a~%Cleaning up...~%" condition)
+	    (force-output)
+	    (when (probe-file dest-dir)
+	      (my-delete-directory-and-files dest-dir)))
+	*cleanup-forms*)
 
   (dolist (dir '("large/" "medium/" "small/" "thumbs/"
 		 "pages/" "pages/small/" "pages/medium/" "pages/large/"))

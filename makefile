@@ -13,10 +13,7 @@ all:	build install
 
 build:	FORCE
 	rm -fr dist
-	$(mlisp) -L buildit.cl -kill
-ifeq ($(on_windows),yes)
-	"$(acldir)/bin/setcmd -o dist/pubpics.exe --
-endif
+	$(mlisp) -L buildit.cl -kill -batch
 
 install: FORCE
 ifeq ($(on_windows),yes)

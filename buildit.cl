@@ -1,6 +1,8 @@
 
 (in-package :user)
 
+(setq excl::*break-on-warnings* t)
+
 (declaim (optimize (speed 3)))
 (compile-file "pubpics.cl")
 
@@ -41,8 +43,7 @@
   (delete-file "dist/pubpics.exe")
   (sys:copy-file "sys:buildi.exe" "dist/pubpics.exe"))
 
-#-mswindows
-(with-open-file (s "dist/lisprc" :direction :output)
+(with-open-file (s "dist/pubpics.rc" :direction :output)
   (format s ".command-line: --~%"))
 
 (sys:copy-file "home.gif" "dist/home.gif")
