@@ -80,7 +80,7 @@ dest-dir       - non-existent directory for web pages
 ")
 
 (defvar *image-magick-root*
-    #+mswindows "c:/ImageMagick/"
+    #+mswindows "c:/Program Files/ImageMagick-5.4.9-Q16/"
     #-mswindows "/usr/bin/X11/")
 
 (defvar *large-divisor* 1.5 "How much `large' images are scaled down.")
@@ -464,17 +464,18 @@ dest-dir       - non-existent directory for web pages
 	  (html
 	   ((:td :width "80" :align "center")
 	    :newline
-	    ((:a :href (namestring previous-page))
+	    ((:a :href (forward-slashify (namestring previous-page)))
 	     ((:img :src "../../previous.gif" :height "30" :width "30"
 		    :border "0" :alt "Previous"))))))
 	:newline
 	((:td :width "80" :align "center")
 	 :newline
 	 ((:a :href
-	      (namestring
-	       (merge-pathnames
-		(page-number-to-index image-number index-size size)
-		"../../")))
+	      (forward-slashify
+	       (namestring
+		(merge-pathnames
+		 (page-number-to-index image-number index-size size)
+		 "../../"))))
 	  ((:img :src "../../home.gif" :height "30" :width "30"
 		 :border "0" :alt "Home"))))
 	:newline
@@ -482,7 +483,7 @@ dest-dir       - non-existent directory for web pages
 	  (html
 	   ((:td :width "80" :align "center")
 	    :newline
-	    ((:a :href (namestring next-page))
+	    ((:a :href (forward-slashify (namestring next-page)))
 	     :newline
 	     ((:img :src "../../next.gif" :height "30" :width "30"
 		    :border "0" :alt "Next"))))))))))
@@ -635,17 +636,18 @@ dest-dir       - non-existent directory for web pages
 		  (:small "_small")
 		  (:medium "")
 		  (:large "_large"))))
-    (namestring
-     (merge-pathnames
-      (make-pathname :type "htm")
-      (if* index-size
-	 then (let ((page-number (1+ (truncate image-number index-size))))
-		(format nil "index~a~a"
-			suffix
-			(if* (= page-number 1)
-			   then ""
-			   else page-number)))
-	 else (format nil "index~a" suffix))))))
+    (forward-slashify
+     (namestring
+      (merge-pathnames
+       (make-pathname :type "htm")
+       (if* index-size
+	  then (let ((page-number (1+ (truncate image-number index-size))))
+		 (format nil "index~a~a"
+			 suffix
+			 (if* (= page-number 1)
+			    then ""
+			    else page-number)))
+	  else (format nil "index~a" suffix)))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; utils
@@ -657,6 +659,7 @@ dest-dir       - non-existent directory for web pages
 	 (end (+ start section-size)))
     (subseq list start end)))
 
+#+ignore
 (defun my-read-line (stream &optional terminate-on-space)
   (let ((term-chars
 	 `(#\return #\newline ,@(when terminate-on-space '(#\space))))
@@ -681,6 +684,7 @@ dest-dir       - non-existent directory for web pages
 	     else (concatenate 'simple-string (nreverse line)))))
       (push c line))))
 
+#+ignore
 (defun read-lines (stream)
   (let ((lines '())
 	line)
@@ -712,6 +716,7 @@ dest-dir       - non-existent directory for web pages
       (ignore-errors (delete-directory p))))
   t)
 
+#+ignore
 (defun my-delete-directory (directory)
   (when (probe-file directory)
     (handler-case (delete-directory directory)
@@ -739,7 +744,8 @@ dest-dir       - non-existent directory for web pages
       (setq tmp nil))))
 
 (defun forward-slashify (string)
-  (substitute #\/ #\\ string)) 
+  #+mswindows (substitute #\/ #\\ string)
+  #-mswindows string)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; An experimental run-shell-command scheduler.

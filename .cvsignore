@@ -1,2 +1,5 @@
 dist
 *.fasl
+pubpics
+test
+testout

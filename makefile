@@ -3,7 +3,7 @@
 on_windows = $(shell if test -d "c:/"; then echo yes; else echo no; fi)
 
 ifeq ($(on_windows),yes)
-acldir = //c/Program Files/ACL60
+acldir = /c/Program Files/acl62
 mlisp = "$(acldir)/mlisp.exe" +B +cn
 else
 mlisp = mlisp
@@ -49,5 +49,9 @@ dist:	FORCE
 
 clean: FORCE
 	rm -fr *.fasl pubpics *.gz *.bz2 */*.fasl
+
+test: FORCE
+	rm -fr testout
+	pubpics/pubpics test/ testout/
 
 FORCE:

@@ -1,3 +1,10 @@
+2002-09-17    <layer@OOB2>
+
+	* buildit.cl: update for 6.2
+	* makefile: update acldir for 6.2 on windows; add `test' rule
+	* pubpics.cl: fixes for windows pathnames; #+ignore a few unused
+	functions
+
 2002-05-14  Kevin Layer  <layer@relay.known.net>
 
 	* buildit.cl: remove :include-common-graphics keyword

@@ -15,7 +15,6 @@
  :include-compiler nil
  :us-government nil
  :presto nil
- :debug-on-error t
  :discard-local-name-info t
  :discard-source-file-info t
  :discard-xref-info t
@@ -23,7 +22,6 @@
  :load-source-file-info nil
  :record-xref-info nil
  :record-source-file-info nil
- :exit-after-image-build t
  :include-devel-env nil
  :include-tpl nil
  :newspace 6144
@@ -34,7 +32,6 @@
  :purify nil
  :runtime :standard
  :suppress-allegro-cl-banner t
-;;;:internal-debug "build.in"
  )
 
 #+mswindows
