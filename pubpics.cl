@@ -34,7 +34,7 @@
 -q -- quiet mode (do not print informative messages)
 -t title -- set title of generated pages to 'title', and use this title
    at the top of each photo page
--t description -- addition information for the index page
+-d description -- addition information for the index page
 source-dir -- directory containing images
 dest-dir -- non-existent directory for web pages
 ")
@@ -69,6 +69,7 @@ dest-dir -- non-existent directory for web pages
 		 :title title :description description)
 	(exit 0 :quiet t))
     (error (c)
+      (format t "~a" c)
       (dolist (form *cleanup-forms*)
 	(funcall form c))
       (exit 1 :quiet t))))
@@ -252,14 +253,19 @@ dest-dir -- non-existent directory for web pages
 	  (or (cdr (assoc :dimensions info))
 	      (error "Could not determine dimensions of ~a." from)))
 	 (convert-command
+	  ;; The -size argument causes the convert command to operate
+	  ;; significantly faster on the thumbnail, medium and small
+	  ;; images.
 	  (if* (eq :large type)
 	     then ;; Only put a copyright notice on the large one, since
 		  ;; that's the one that would be useful to someone wanting
 		  ;; to steal one of my images (hey, it's possible!).
-		  
-		  (format nil "~
+		  (let ((x (truncate (first dimensions) *large-divisor*))
+			(y (truncate (second dimensions) *large-divisor*)))
+		    (format nil "~
 ~aconvert ~
      -border 20x20 -bordercolor black ~
+     -size ~ax~a ~
      -geometry \"~ax~a>\" ~
      -font ~a ~
      -pointsize 12 ~
@@ -267,17 +273,14 @@ dest-dir -- non-existent directory for web pages
      -fill white ~
      -draw \"text 3,9 '~a 2000 D. Kevin Layer'\" ~
      \"~a\" \"~a\""
-			  *image-magick-root*
-			  (truncate (first dimensions)
-				    *large-divisor*)
-			  (truncate (second dimensions)
-				    *large-divisor*)
-			  #+mswindows "C:/Winnt/fonts/arialbd.ttf"
-			  #-mswindows "arialbd"
-			  #+mswindows "\\0x00a9" ;; Unicode copyright symbol
-			  #-mswindows "Copyright"
-			  (forward-slashify (namestring from))
-			  (forward-slashify (namestring to)))
+			    *image-magick-root*
+			    x y x y
+			    #+mswindows "C:/Winnt/fonts/arialbd.ttf"
+			    #-mswindows "arialbd"
+			    #+mswindows "\\0x00a9" ;; Unicode copyright symbol
+			    #-mswindows "Copyright"
+			    (forward-slashify (namestring from))
+			    (forward-slashify (namestring to))))
 	     else (let* ((landscape (> (first dimensions)
 				       (second dimensions)))
 			 (tn-max 100)
@@ -292,25 +295,25 @@ dest-dir -- non-existent directory for web pages
 			     then tn-max
 			     else (round (* tn-max
 					    (/ (first dimensions)
-					       (second dimensions)))))))
-		    (format nil
-			    "~
-~aconvert -quality 50 -geometry \"~ax~a>\" \"~a\" \"~a\""
-			    *image-magick-root*
-			    (if* (eq :thumbnail type)
+					       (second dimensions))))))
+			 (x (if* (eq :thumbnail type)
 			       then tn-width
 			       else (truncate
 				     (first dimensions)
 				     (ecase type
 				       (:medium *medium-divisor*)
-				       (:small *small-divisor*))))
-			    (if* (eq :thumbnail type)
+				       (:small *small-divisor*)))))
+			 (y (if* (eq :thumbnail type)
 			       then tn-height
 			       else (truncate
 				     (second dimensions)
 				     (ecase type
 				       (:medium *medium-divisor*)
-				       (:small *small-divisor*))))
+				       (:small *small-divisor*))))))
+		    (format nil
+			    "~
+~aconvert -quality 50 -size ~ax~a -geometry \"~ax~a>\" \"~a\" \"~a\""
+			    *image-magick-root* x y x y
 			    (forward-slashify (namestring from))
 			    (forward-slashify (namestring to))))))
 	 (status

@@ -1,3 +1,8 @@
+2001-02-17    <layer@killspam.known.net>
+
+	* pubpics.cl: fix usage; add -size argument, for speed; get
+	dimensions correct, depending on orientation of image
+
 2001-01-10    <layer@relay.known.net>
 
 	* pubpics.cl: fix ^C on linux (whew, what a pain in the ass);
