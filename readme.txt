@@ -1,9 +1,10 @@
-				-[Wed Dec  4 14:58:41 2002 by layer]-
+				-[Wed Feb 26 13:05:04 2003 by layer]-
 
 Table of Contents:
 
 1. Introduction
-2. Installation
+2. Binary installation
+3. Building from source code
 
 ===============================================================================
 1. Introduction
@@ -119,7 +120,7 @@ There are, of course, lots of options.  Here's a description of them:
 files in the destination directory.
 
 ===============================================================================
-2. Installation
+2. Binary installation [Linux only]
 
 Unpack the .gz or .bz2 file like this:
 
@@ -134,3 +135,12 @@ You can then move this directory somewhere, say /usr/local/ and put
 /usr/local/pubpics-1.25 in your PATH so the `pubpics' executable is
 readily available.
 
+===============================================================================
+3. Building from source code
+
+Start up a fully patched Allegro CL 6.2 and evaluate this:
+
+      (load "buildit.cl")
+
+It will make a publics/ directory, which is how the pubpics-<version>
+directory in #2 above was created.

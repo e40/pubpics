@@ -3,6 +3,7 @@
 
 	* makefile: add readme to DIST dir
 	* readme.txt: update
+	* pubpics.cl: need (require :uri) due to new aserve
 
 2002-12-04  Kevin Layer  <layer@relay.known.net>
 

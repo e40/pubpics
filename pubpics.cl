@@ -33,6 +33,7 @@
 	   (or (probe-file "exif-utils/exifinfo.fasl")
 	       #+mswindows (probe-file "c:/src/exif-utils/exifinfo.fasl")))
   (use-package :util.exif)
+  (require :uri)
   (require :aserve
 	   (or (probe-file "sys:aserve;aserve.fasl")
 	       (probe-file "sys:code;aserve.fasl")))
