@@ -1,8 +1,5 @@
 ;; $Id$
 
-;; Todo:
-;; 1. add missing / to end of command line arguments
-
 (in-package :user)
 
 (eval-when (compile)
@@ -53,6 +50,9 @@
 		&aux (pictures '())
 		     (sizes '(:small :medium :large))
 		     i npics)
+  
+  (setq source-dir (pathname-as-directory (pathname source-dir)))
+  (setq dest-dir (pathname-as-directory (pathname dest-dir)))
   
   (when (null title) (error-die "No title!"))
   (when (null description) (error-die "No description!"))
