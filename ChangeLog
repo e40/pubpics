@@ -1,3 +1,8 @@
+2002-12-04  Kevin Layer  <layer@relay.known.net>
+
+	* makefile: have all do a `clean' first
+	* pubpics.cl: put under LLGPL
+
 2002-10-16  Kevin Layer  <layer@relay.known.net>
 
 	* pubpics.cl: remove #+ignore'd code; remove

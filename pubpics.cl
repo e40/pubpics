@@ -1,6 +1,11 @@
-;; Web publisher for digital photos, written by Kevin Layer.
-;; This code is in the public domain.  You may do with it what you
-;; want.
+;; Web publisher for digital photos.
+;;
+;; This software is Copyright (c) Kevin Layer, 2000-2002.
+;; Kevin Layer grants you the rights to distribute
+;; and use this software as governed by the terms
+;; of the Lisp Lesser GNU Public License
+;; (http://opensource.franz.com/preamble.html),
+;; known as the LLGPL.
 ;;
 ;; What exactly does it do?  It takes as input a set of jpg's from a
 ;; digital camera and produces nice looking web pages, with index pages
@@ -10,15 +15,14 @@
 ;; notice added to them.
 ;;
 ;; Required software:
-;; - Allegro CL: probably any version will do, but I used ACL 6.0.
-;;   http://www.franz.com
-;; - ImageMagick 5.2.7: other later versions may work, but I'm pretty sure
-;;   some earlier versions have problems.  It works on Windows (at least
-;;   2000) and Linux (at least RedHat 6.1).
-;;   http://www.imagemagick.org
 ;;
-;; This program works on Windows (at least 2000) and Linux (at least RedHat
-;; 6.1).
+;; - Allegro CL 6.2 Enterprise.  See http://www.franz.com.
+;;
+;; - ImageMagick.  Version 5.2.7 used on Linux and version 5.4.9 on
+;;   Windows.  Other later versions probably work, but I'm pretty
+;;   sure ones earlier than 5.2.7 have problems.  See
+;;   http://www.imagemagick.org for more information.
+;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; $Id$
 
@@ -28,7 +32,8 @@
   ;; An experimental run-shell-command scheduler that allows multiple,
   ;; concurrent run-shell-command's, in order to take advantage of multiple
   ;; processors.  Because ImageMagik takes so much memory, this doesn't
-  ;; turn out to save a lot of time (unless you have LOTS of RAM).
+  ;; turn out to save a lot of time (unless you have LOTS of RAM) on the
+  ;; Linux kernel I used (2.2.x).  Perhaps in 2.6 it will have an effect.
   #+ignore (push :rsc-scheduler *features*)
   
   ;;(push :debug-pubpics *features*)
@@ -299,16 +304,14 @@ dest-dir       - non-existent directory for web pages
   (values))
 
 (defun date-based-filename-p (filename)
-  (match-regexp
-   (load-time-value (compile-regexp "^[0-9]+-[0-9]+"))
-   filename
-   :return nil))
+  (match-regexp (load-time-value (compile-regexp "^[0-9]+-[0-9]+"))
+		filename
+		:return nil))
 
 (defun numbered-filename-p (filename)
-  (match-regexp
-   (load-time-value (compile-regexp "^[a-zA-Z]+[0-9]+"))
-   filename
-   :return nil))
+  (match-regexp (load-time-value (compile-regexp "^[a-zA-Z]+[0-9]+"))
+		filename
+		:return nil))
 
 (defun date-based-filename-sort-function (item1 item2)
   ;; return true, iff item1 < item2
@@ -377,6 +380,8 @@ dest-dir       - non-existent directory for web pages
      -fill white ~
      -font ~a ~
      -draw \"text 3,9 '~a ~d ~a'\" "
+			 ;; maybe newer versions on Windows don't require
+			 ;; the absolute path... it's bogus, for sure.
 			 #+mswindows "C:/Winnt/fonts/arialbd.ttf"
 			 #-mswindows "arialbd"
 			 #+mswindows "\\0x00a9" ;; Unicode copyright symbol

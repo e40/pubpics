@@ -13,7 +13,7 @@ endif
 
 default:	build
 
-all:	build install
+all:	clean build install
 
 build:	FORCE
 	rm -fr pubpics
