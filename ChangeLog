@@ -1,4 +1,13 @@
+2001-04-22    <layer@relay.known.net>
+***1.16 released***
+
+	* pubpics.cl:
+	- rearrange `main' for debugging
+	- copyright in the current year
+	- fix a few bugs with -n
+
 2001-04-18    <layer@relay.known.net>
+***1.15 released***
 
 	* pubpics.cl:
 	- fix -n

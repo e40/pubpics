@@ -31,6 +31,8 @@
   ;; turn out to save a lot of time (unless you have LOTS of RAM).
   #+ignore (push :rsc-scheduler *features*)
   
+  ;;(push :debug-pubpics *features*)
+  
   (compile-file-if-needed
    (or (probe-file "exif-utils/exifinfo.cl")
        #+mswindows (probe-file "c:/src/exif-utils/exifinfo.cl")
@@ -89,30 +91,33 @@ dest-dir       - non-existent directory for web pages
   ;; idea.  It appears that /bin/csh fixes something in how our signal
   ;; handling works.
   #+linux (setf (sys:getenv "SHELL") "/bin/csh")
-  (handler-case
-      (sys:with-command-line-arguments
-	  ("c:d:fI:n:qt:V"
-	   copyright description force-flag image-file index-size
-	   *quiet* title
-	   print-version-and-exit)
-	  (rest)
-	(declare (ignore image-file))
-	(when print-version-and-exit
-	  (format t "pubpics: ~a~%" *version*)
-	  (exit 0 :quiet t))
-	(when (/= 2 (length rest)) (error *usage*))
-	#+rsc-scheduler (setq *quiet* t)
-	(pubpics (first rest) (second rest) :force-flag force-flag
-		 :title title :description description
-		 :copyright copyright
-		 :index-size (read-from-string index-size))
-	#+rsc-scheduler (rsc-finalize)
-	(exit 0 :quiet t))
-    (error (c)
-      (format t "~a" c)
-      (dolist (form .cleanup-forms.)
-	(funcall form c))
-      (exit 1 :quiet t))))
+  (flet ((doit ()
+	   (sys:with-command-line-arguments
+	       ("c:d:fI:n:qt:V"
+		copyright description force-flag image-file index-size
+		*quiet* title print-version-and-exit)
+	       (rest)
+	     (declare (ignore image-file))
+	     (when print-version-and-exit
+	       (format t "pubpics: ~a~%" *version*)
+	       (exit 0 :quiet t))
+	     (when (/= 2 (length rest)) (error *usage*))
+	     #+rsc-scheduler (setq *quiet* t)
+	     (pubpics (first rest) (second rest) :force-flag force-flag
+		      :title title :description description
+		      :copyright copyright
+		      :index-size (when index-size
+				    (read-from-string index-size)))
+	     #+rsc-scheduler (rsc-finalize)
+	     (exit 0 :quiet t))))
+    #+debug-pubpics (doit)
+    #-debug-pubpics
+    (handler-case
+	(doit)
+      (error (c)
+	(format t "~a" c)
+	(dolist (form .cleanup-forms.) (funcall form c))
+	(exit 1 :quiet t)))))
 
 (defun pubpics (source-dir dest-dir
 		&key force-flag title description copyright index-size
@@ -360,11 +365,13 @@ dest-dir       - non-existent directory for web pages
      -pointsize 12 ~
      -fill white ~
      -font ~a ~
-     -draw \"text 3,9 '~a 2000 ~a'\" "
+     -draw \"text 3,9 '~a ~d ~a'\" "
 			 #+mswindows "C:/Winnt/fonts/arialbd.ttf"
 			 #-mswindows "arialbd"
 			 #+mswindows "\\0x00a9" ;; Unicode copyright symbol
 			 #-mswindows "Copyright"
+			 (nth-value 5 (decode-universal-time
+				       (get-universal-time)))
 			 copyright))
 		      (format s "\"~a\" \"~a\""
 			      (forward-slashify (namestring from))
@@ -486,8 +493,8 @@ dest-dir       - non-existent directory for web pages
   (let* ((n-pictures (length pictures))
 	 (n-pages (ceiling n-pictures index-size)))
     (flet
-	((gen-index (s size title description pictures indicies
-		     &optional prev-index next-index)
+	((gen-index (s size title description pictures
+		     &optional indicies prev-index next-index)
 	   (html-stream
 	    s
 	    (:head
@@ -508,44 +515,46 @@ dest-dir       - non-existent directory for web pages
 		 (:p (:princ-safe description)))))
 	      :newline
 ;;;; the index buttons:
-	      (:p
-	       :newline
-	       (:center
-		:newline
-		((:table :border "0" :cellpadding "0" :cellspacing "2")
-		 :newline
-		 (:tr
+	      (when indicies
+		(html
+		 (:p
 		  :newline
-		  ((:td :colspan "2" :align "center")
-		   (do* ((index indicies (cdr index))
-			 (i 1 (1+ i)))
-		       ((null index))
-		     (html ((:a :href (car index)) (:princ i)))
-		     (when (cdr index)
-		       (html " | ")))))
-		 :newline
-		 (:tr
-		  :newline
-		  (if* prev-index
-		     then (html
-			   ((:td :align "right"  :width "50%")
-			    :newline
-			    ((:a :href (file-namestring prev-index))
-			     ((:img :src "previous.gif"
-				    :height "30" :width "30"
-				    :border "0"
-				    :alt "Previous index page")))))
-		     else (html ((:td :width "50%") " ")))
-		  :newline
-		  (if* next-index
-		     then (html
-			   ((:td :align "left"  :width "50%")
-			    :newline
-			    ((:a :href (file-namestring next-index))
-			     :newline
-			     ((:img :src "next.gif" :height "30" :width "30"
-				    :border "0" :alt "Next index page")))))
-		     else (html ((:td :width "50%") " ")))))))
+		  (:center
+		   :newline
+		   ((:table :border "0" :cellpadding "0" :cellspacing "2")
+		    :newline
+		    (:tr
+		     :newline
+		     ((:td :colspan "2" :align "center")
+		      (do* ((index indicies (cdr index))
+			    (i 1 (1+ i)))
+			  ((null index))
+			(html ((:a :href (car index)) (:princ i)))
+			(when (cdr index)
+			  (html " | ")))))
+		    :newline
+		    (:tr
+		     :newline
+		     (if* prev-index
+			then (html
+			      ((:td :align "right"  :width "50%")
+			       :newline
+			       ((:a :href (file-namestring prev-index))
+				((:img :src "previous.gif"
+				       :height "30" :width "30"
+				       :border "0"
+				       :alt "Previous index page")))))
+			else (html ((:td :width "50%") " ")))
+		     :newline
+		     (if* next-index
+			then (html
+			      ((:td :align "left"  :width "50%")
+			       :newline
+			       ((:a :href (file-namestring next-index))
+				:newline
+				((:img :src "next.gif" :height "30" :width "30"
+				       :border "0" :alt "Next index page")))))
+			else (html ((:td :width "50%") " ")))))))))
 	     
 ;;;; the thumbnails:
 	      :newline
@@ -611,18 +620,21 @@ dest-dir       - non-existent directory for web pages
 	 :newline))))))
 
 (defun page-number-to-index (image-number index-size size)
-  (let ((page-number (1+ (truncate image-number index-size))))
+  (let ((suffix (case size
+		  (:small "_small")
+		  (:medium "")
+		  (:large "_large"))))
     (namestring
      (merge-pathnames
       (make-pathname :type "htm")
-      (format nil "index~a~a"
-	      (case size
-		(:small "_small")
-		(:medium "")
-		(:large "_large"))
-	      (if* (= page-number 1)
-		 then ""
-		 else page-number))))))
+      (if* index-size
+	 then (let ((page-number (1+ (truncate image-number index-size))))
+		(format nil "index~a~a"
+			suffix
+			(if* (= page-number 1)
+			   then ""
+			   else page-number)))
+	 else (format nil "index~a" suffix))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; utils
