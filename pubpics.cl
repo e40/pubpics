@@ -58,8 +58,8 @@ dest-dir -- non-existent directory for web pages
   #+linux (setf (sys:getenv "SHELL") "/bin/csh")
   (handler-case
       (sys:with-command-line-arguments
-	  ("d:I:fqt:V"
-	   description image-file force-flag *quiet* title
+	  ("cd:I:fqt:V"
+	   copyright description image-file force-flag *quiet* title
 	   print-version-and-exit)
 	  (rest)
 	(declare (ignore image-file))
@@ -69,7 +69,8 @@ dest-dir -- non-existent directory for web pages
 	(when (/= 2 (length rest)) (error *usage*))
 	#+rsc-scheduler (setq *quiet* t)
 	(pubpics (first rest) (second rest) :force-flag force-flag
-		 :title title :description description)
+		 :title title :description description
+		 :copyright copyright)
 	#+rsc-scheduler (rsc-finalize)
 	(exit 0 :quiet t))
     (error (c)
@@ -79,7 +80,7 @@ dest-dir -- non-existent directory for web pages
       (exit 1 :quiet t))))
 
 (defun pubpics (source-dir dest-dir
-		&key force-flag title description
+		&key force-flag title description copyright
 		&aux (pictures '())
 		     (sizes '(:small :medium :large))
 		     i npics)
@@ -235,7 +236,8 @@ dest-dir -- non-existent directory for web pages
       (make-image
        :large picture-info picture
        (merge-pathnames (file-namestring picture)
-			(merge-pathnames "large/" dest-dir)))
+			(merge-pathnames "large/" dest-dir))
+       :copyright copyright)
       (when (not *quiet*) (format t " medium")(force-output))
       (make-image
        :medium picture-info picture
@@ -257,7 +259,7 @@ dest-dir -- non-existent directory for web pages
     `((:dimensions ,(exif-info-image-width ed)
 		   ,(exif-info-image-length ed)))))
 
-(defun make-image (type info from to)
+(defun make-image (type info from to &key copyright)
   (let* ((dimensions
 	  (or (cdr (assoc :dimensions info))
 	      (error "Could not determine dimensions of ~a." from)))
@@ -271,25 +273,29 @@ dest-dir -- non-existent directory for web pages
 		  ;; to steal one of my images (hey, it's possible!).
 		  (let ((x (truncate (first dimensions) *large-divisor*))
 			(y (truncate (second dimensions) *large-divisor*)))
-		    (format nil "~
+		    (with-output-to-string (s)
+		      (format s "~
 ~aconvert ~
-     -border 20x20 -bordercolor black ~
      -size ~ax~a ~
      -geometry \"~ax~a>\" ~
-     -font ~a ~
+     -quality 50 "
+			      *image-magick-root*
+			      x y x y)
+		      (when copyright
+			(format
+			 s "~
+     -border 20x20 -bordercolor black ~
      -pointsize 12 ~
-     -quality 50 ~
      -fill white ~
-     -draw \"text 3,9 '~a 2000 D. Kevin Layer'\" ~
-     \"~a\" \"~a\""
-			    *image-magick-root*
-			    x y x y
-			    #+mswindows "C:/Winnt/fonts/arialbd.ttf"
-			    #-mswindows "arialbd"
-			    #+mswindows "\\0x00a9" ;; Unicode copyright symbol
-			    #-mswindows "Copyright"
-			    (forward-slashify (namestring from))
-			    (forward-slashify (namestring to))))
+     -font ~a ~
+     -draw \"text 3,9 '~a 2000 D. Kevin Layer'\" "
+			 #+mswindows "C:/Winnt/fonts/arialbd.ttf"
+			 #-mswindows "arialbd"
+			 #+mswindows "\\0x00a9" ;; Unicode copyright symbol
+			 #-mswindows "Copyright"))
+		      (format s "\"~a\" \"~a\""
+			      (forward-slashify (namestring from))
+			      (forward-slashify (namestring to)))))
 	     else (let* ((landscape (> (first dimensions)
 				       (second dimensions)))
 			 (tn-max 100)
