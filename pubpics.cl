@@ -43,7 +43,9 @@
 	   (or (probe-file "exif-utils/exifinfo.fasl")
 	       #+mswindows (probe-file "c:/src/exif-utils/exifinfo.fasl")))
   (use-package :util.exif)
-  (require :aserve)
+  (require :aserve
+	   (or (probe-file "sys:aserve;aserve.fasl")
+	       (probe-file "sys:code;aserve.fasl")))
   (use-package :net.html.generator)
   (require :aclwin)
   (require :fileutil))
@@ -216,7 +218,7 @@ dest-dir       - non-existent directory for web pages
   (when (not *quiet*)
     (format t "~%make html pages:")
     (force-output))
-  (dolist (image '("home.gif" "next.gif" "previous.gif"))
+  (dolist (image '("home.gif" "next.gif" "previous.gif" "blank.gif"))
     (sys:copy-file
      (if* (probe-file image)
 	thenret
@@ -447,56 +449,54 @@ dest-dir       - non-existent directory for web pages
      :newline
      (:tr
       :newline
+      (:td
+       :newline
+       ((:a :href
+	    (forward-slashify
+	     (namestring
+	      (merge-pathnames
+	       (page-number-to-index image-number index-size size)
+	       "../../"))))
+	((:img :src "../../home.gif" :height "30" :width "30"
+	       :border "0" :alt "Home"))))
+      :newline
+      (:td
+       :newline
+       (if* previous-page
+	 then (html
+	       ((:a :href (forward-slashify (namestring previous-page)))
+		((:img :src "../../previous.gif" :height "30" :width "30"
+		       :border "0" :alt "Previous"))))
+	  else (html
+		((:img :src "../../blank.gif" :height "30" :width "30"
+		       :border "0" :alt "")))))
+      :newline
+      (:td
+       :newline
+       (if* next-page
+	  then (html
+		((:a :href (forward-slashify (namestring next-page)))
+		 :newline
+		 ((:img :src "../../next.gif" :height "30" :width "30"
+			:border "0" :alt "Next"))))
+	  else (html
+		((:img :src "../../blank.gif" :height "30" :width "30"
+		       :border "0" :alt "")))))
+      :newline
       (:td 
        :newline
-       (:h2 (:princ-safe
-	     (format nil "~a/~a" title (file-namestring image)))))))
+       (:h2
+	(:princ-safe (format nil "~a (~a) " title (file-namestring image)))
+	
+	(dolist (size other-sizes)
+	 (html
+	  ((:a :href (format nil "../~a/~a.htm" size (pathname-name image)))
+	   " / "
+	   (:princ-safe (format nil "~a image" size)))))))))
     :newline
-    (:p
+    (:center
      :newline
-     (:center
-      :newline
-      ((:table :border "0" :cellpadding "0" :cellspacing "2" :width "200")
-       :newline
-       (:tr
-	:newline
-	(when previous-page
-	  (html
-	   ((:td :width "80" :align "center")
-	    :newline
-	    ((:a :href (forward-slashify (namestring previous-page)))
-	     ((:img :src "../../previous.gif" :height "30" :width "30"
-		    :border "0" :alt "Previous"))))))
-	:newline
-	((:td :width "80" :align "center")
-	 :newline
-	 ((:a :href
-	      (forward-slashify
-	       (namestring
-		(merge-pathnames
-		 (page-number-to-index image-number index-size size)
-		 "../../"))))
-	  ((:img :src "../../home.gif" :height "30" :width "30"
-		 :border "0" :alt "Home"))))
-	:newline
-	(when next-page
-	  (html
-	   ((:td :width "80" :align "center")
-	    :newline
-	    ((:a :href (forward-slashify (namestring next-page)))
-	     :newline
-	     ((:img :src "../../next.gif" :height "30" :width "30"
-		    :border "0" :alt "Next"))))))))))
-    :newline
-    (:p
-     (:center
-      ((:img :src image :border "0" :alt (file-namestring image)))))
-    (:p
-     (dolist (size other-sizes)
-       (html
-	((:a :href (format nil "../~a/~a.htm" size (pathname-name image)))
-	 (:princ-safe (format nil "A ~a image." size)))
-	:br))))))
+     ((:img :src image :border "0" :alt (file-namestring image)))))))
 
 (defun make-index (size index-name dest-dir pictures title description
 		   index-size)

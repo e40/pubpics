@@ -45,3 +45,4 @@
 (sys:copy-file "home.gif" "pubpics/home.gif")
 (sys:copy-file "next.gif" "pubpics/next.gif")
 (sys:copy-file "previous.gif" "pubpics/previous.gif")
+(sys:copy-file "blank.gif" "pubpics/blank.gif")
