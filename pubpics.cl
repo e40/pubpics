@@ -3,10 +3,15 @@
 (in-package :user)
 
 (eval-when (compile)
-  (compile-file-if-needed "c:/src/exif-utils/exifdump.cl"))
+  (compile-file-if-needed
+   (or (probe-file "exif-utils/exifdump.cl")
+       #+mswindows (probe-file "c:/src/exif-utils/exifdump.cl")
+       (error "Could not find exifdump.cl"))))
 
 (eval-when (compile eval load)
-  (require :exifdump "c:/src/exif-utils/exifdump.fasl")
+  (require :exifdump
+	   (or (probe-file "exif-utils/exifdump.fasl")
+	       #+mswindows (probe-file "c:/src/exif-utils/exifdump.fasl")))
   (require :aserve)
   (use-package :net.html.generator)
   (require :aclwin)
@@ -27,7 +32,9 @@
 (defvar *usage*
     "Usage: [-V] [-n] [-q] -t title -d description source-dir dest-dir~%")
 
-(defvar *image-magick-root* "c:/ImageMagick/")
+(defvar *image-magick-root*
+    #+mswindows "c:/ImageMagick/"
+    #-mswindows "/usr/local/bin/")
 
 (defvar *large-divisor* 1.5)
 (defvar *medium-divisor* 2)
@@ -196,25 +203,7 @@
   (let ((ed (parse-exif-data file)))
     (when (null ed) (error "No exif info in ~a!" file))
     `((:dimensions ,(exif-info-image-width ed)
-		   ,(exif-info-image-length ed))))
-  #+ignore
-  (multiple-value-bind (s error-s pid)
-      (progn
-	(run-shell-command
-	 (format nil "~aidentify.exe -format (%w\\n%h)\\n ~a" 
-		 *image-magick-root* file)
-	 :output :stream
-	 :error-output :stream
-	 :wait nil
-	 :show-window :hide))
-    (unwind-protect
-	(let ((info (read s nil s)))
-	  (when (null info)
-	    (error "could not read info from ~a." file))
-	  `((:dimensions . ,info)))
-      (sys:reap-os-subprocess :pid pid :wait t)
-      (ignore-errors (close s))
-      (ignore-errors (close error-s)))))
+		   ,(exif-info-image-length ed)))))
 
 (defun make-image (type info from to)
   (let* ((dimensions
@@ -227,19 +216,23 @@
 		  ;; to steal one of my images (hey, it's possible!).
 		  
 		  (format nil "~
-~aconvert.exe ~
+~aconvert ~
      -border 20x20 -bordercolor black ~
      -geometry \"~ax~a>\" ~
-     -font C:/Winnt/fonts/arialbd.ttf ~
+     -font ~a ~
      -pointsize 12 ~
      -fill white ~
-     -draw \"text 3,9 '\\0x00a9 2000 D. Kevin Layer'\" ~
+     -draw \"text 3,9 '~a 2000 D. Kevin Layer'\" ~
      \"~a\" \"~a\""
 			  *image-magick-root*
 			  (truncate (first dimensions)
 				    *large-divisor*)
 			  (truncate (second dimensions)
 				    *large-divisor*)
+			  #+mswindows "C:/Winnt/fonts/arialbd.ttf"
+			  #-mswindows "arialbd"
+			  #+mswindows "\\0x00a9" ;; Unicode copyright symbol
+			  #-mswindows "Copyright"
 			  (forward-slashify (namestring from))
 			  (forward-slashify (namestring to)))
 	     else (let* ((landscape (> (first dimensions)
@@ -259,7 +252,7 @@
 					       (second dimensions)))))))
 		    (format nil
 			    "~
-~aconvert.exe -geometry \"~ax~a>\" \"~a\" \"~a\""
+~aconvert -geometry \"~ax~a>\" \"~a\" \"~a\""
 			    *image-magick-root*
 			    (if* (eq :thumbnail type)
 			       then tn-width
