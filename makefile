@@ -12,7 +12,7 @@ all:	build install
 
 build:	FORCE
 	rm -fr dist
-	mlisp -L buildit.cl -kill
+	$(mlisp) -L buildit.cl -kill
 
 install: FORCE
 ifeq ($(on_windows),yes)

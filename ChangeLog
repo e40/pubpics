@@ -1,6 +1,8 @@
 2001-01-06    <layer@OOB>
 
 	* pubpics.cl: use quality of 50
+	* makefile; use new $(mlisp)
+	* readme.txt: add test data
 
 2001-01-06    <layer@relay.known.net>
 
