@@ -1,5 +1,7 @@
 2000-12-31    <layer@OOB>
 
+	* pubpics.cl: add -V
+
 	* pubpics.cl: make sure command line args are interpreted as
 	directories
 
