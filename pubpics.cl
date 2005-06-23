@@ -54,8 +54,9 @@
 (defvar *debug* nil)
 (defvar *usage*
     "~
-Usage: [-p] [-c name] [-n size] [-V] [-q] [-t title] [-d description]
+Usage: [-a file] [-p] [-c name] [-n size] [-V] [-q] [-t title] [-d description]
        source-dir dest-dir
+-a file        - annotations file
 -D             - debug
 -c name        - for the largest image size, add copyright in a border for
                  `name' 
@@ -81,6 +82,7 @@ dest-dir       - non-existent directory for web pages
 (defvar *medium-divisor* 2  "How much `medium' images are scaled down.")
 (defvar *small-divisor* 3   "How much `small' images are scaled down.")
 (defvar .cleanup-forms. nil)
+(defvar .annotations. nil)
 
 (defun pubpics-init-function ()
   ;; The following makes run-shell-command interruptable.  Why, I have no
@@ -89,9 +91,10 @@ dest-dir       - non-existent directory for web pages
   #+linux (setf (sys:getenv "SHELL") "/bin/csh")
   (flet ((doit ()
 	   (sys:with-command-line-arguments
-	       ("c:Dd:fn:pqrt:V"
-		copyright debug description force-flag index-size
-		pause *quiet* recurse title print-version-and-exit)
+	       ("a:c:Dd:fn:pqrt:V"
+		annotations-file copyright debug description force-flag
+		index-size pause *quiet* recurse title
+		print-version-and-exit)
 	       (rest)
 	     (when print-version-and-exit
 	       (format t "pubpics: ~a~%" *version*)
@@ -100,6 +103,12 @@ dest-dir       - non-existent directory for web pages
 	     (when debug
 	       (trace pubpics)
 	       (setq *debug* t))
+	     (when annotations-file
+	       (when (not (probe-file annotations-file))
+		 (error "Annotations file (~a) does not exist."
+			annotations-file))
+	       (with-open-file (s annotations-file :direction :input)
+		 (setq .annotations. (ignore-errors (read s)))))
 	     #+rsc-scheduler (setq *quiet* t)
 	     (pubpics (first rest) (second rest) :force-flag force-flag
 		      :title title :description description
@@ -433,10 +442,13 @@ dest-dir       - non-existent directory for web pages
     t))
 
 (defun make-page (size s image image-number index-size previous-page
-		  next-page title other-sizes)
+		  next-page title other-sizes
+		  &aux (basename (file-namestring image))
+		       (annotation (cdr (assoc basename .annotations.
+					       :test #'string=))))
   (html-stream
    s
-   (:head (:title (:princ-safe (file-namestring image))))
+   (:head (:title (:princ-safe basename)))
    :newline
    ((:body :bgcolor "#ffffff" :link "#ff0000" :vlink "#52188C")
     :newline
@@ -489,6 +501,8 @@ dest-dir       - non-existent directory for web pages
 	   " / "
 	   ((:a :href (format nil "../~a/~a.htm" size (pathname-name image)))
 	    (:princ-safe (format nil "~a image" size)))))))))
+    :newline
+    (when annotation (html (:p (:princ-safe annotation))))
     :newline
     (:center
      :newline
