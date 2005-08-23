@@ -37,7 +37,7 @@ src_files = readme.txt ChangeLog *.cl exif-utils/*.cl *.gif makefile
 
 bin_dir = pubpics-$(version)
 src_dir = pubpics-$(version)-src
-bin_tar = $(bin_dir)-linux-glibc-2.1.tar
+bin_tar = $(bin_dir)-linux-glibc-2.2.tar
 
 bin_gz = DIST/$(bin_tar).gz
 bin_bz2 = DIST/$(bin_tar).bz2
