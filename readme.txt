@@ -1,4 +1,4 @@
-				-[Thu Feb 27 09:49:50 2003 by layer]-
+$Id$
 
 Table of Contents:
 
@@ -21,7 +21,7 @@ copyright notice added to them.
 
 This software relies on other software:
 
-- Allegro CL 6.2 Enterprise.  `pubpics' is written in Allegro Common
+- Allegro CL 7.0 Enterprise.  `pubpics' is written in Allegro Common
   Lisp.  It's less than 1000 source lines of code, and does an amazing
   amount for the size.
 
@@ -124,23 +124,23 @@ files in the destination directory.
 
 Copy the appropriate binary distribution:
 
-ftp://ftp.franz.com/pub/examples/pubpics/pubpics-1.26-linux-glibc-2.1.tar.bz2
-ftp://ftp.franz.com/pub/examples/pubpics/pubpics-1.26-linux-glibc-2.1.tar.gz
-ftp://ftp.franz.com/pub/examples/pubpics/pubpics-1.26-windows.zip
+ftp://ftp.franz.com/pub/examples/pubpics/pubpics-1.30-linux-glibc-2.1.tar.bz2
+ftp://ftp.franz.com/pub/examples/pubpics/pubpics-1.30-linux-glibc-2.1.tar.gz
+ftp://ftp.franz.com/pub/examples/pubpics/pubpics-1.30-windows.zip
 
 Linux:
 
   Unpack the .gz or .bz2 file like this:
 
-  % tar zxf pubpics-1.26-linux-glibc-2.1.tar.gz
+  % tar zxf pubpics-1.30-linux-glibc-2.2.tar.gz
   or
-  % bunzip2 < pubpics-1.26-linux-glibc-2.1.tar.bz2 | tar xf -
+  % bunzip2 < pubpics-1.30-linux-glibc-2.2.tar.bz2 | tar xf -
 
-  which will result in a ``pubpics-1.26'' sub-directory in the directory
+  which will result in a ``pubpics-1.30'' sub-directory in the directory
   in which you execute the tar command above.
 
   You can then move this directory somewhere, say /usr/local/ and put
-  /usr/local/pubpics-1.26 in your PATH so the `pubpics' executable is
+  /usr/local/pubpics-1.30 in your PATH so the `pubpics' executable is
   readily available.
 
 Windows:
@@ -156,7 +156,7 @@ See http://www.imagemagick.org for more information.
 ===============================================================================
 3. Building from source code
 
-Start up a fully patched Allegro CL 6.2 Enterprise Edition and
+Start up a fully patched Allegro CL 7.0 Enterprise Edition and
 evaluate this:
 
       (load "buildit.cl")
