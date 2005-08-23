@@ -75,8 +75,8 @@ dest-dir       - non-existent directory for web pages
 ")
 
 (defvar *image-magick-root*
-    #+mswindows "c:/Program Files/ImageMagick-5.4.9-Q16/"
-    #-mswindows "/usr/bin/")
+    ;; must be in path
+    nil)
 
 (defvar *large-divisor* 1.5 "How much `large' images are scaled down.")
 (defvar *medium-divisor* 2  "How much `medium' images are scaled down.")
@@ -372,7 +372,7 @@ dest-dir       - non-existent directory for web pages
 			(y (truncate (second dimensions) *large-divisor*)))
 		    (with-output-to-string (s)
 		      (format s "~
-~aconvert ~
+~@[~a~]convert ~
      -size ~ax~a ~
      -geometry \"~ax~a>\" ~
      -quality 50 "
@@ -429,7 +429,7 @@ dest-dir       - non-existent directory for web pages
 				       (:small *small-divisor*))))))
 		    (format nil
 			    "~
-~aconvert -quality 50 -size ~ax~a -geometry \"~ax~a>\" \"~a\" \"~a\""
+~@[~a~]convert -quality 50 -size ~ax~a -geometry \"~ax~a>\" \"~a\" \"~a\""
 			    *image-magick-root* x y x y
 			    (forward-slashify (namestring from))
 			    (forward-slashify (namestring to))))))

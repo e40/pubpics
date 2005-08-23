@@ -124,23 +124,23 @@ files in the destination directory.
 
 Copy the appropriate binary distribution:
 
-ftp://ftp.franz.com/pub/examples/pubpics/pubpics-1.30-linux-glibc-2.2.tar.bz2
-ftp://ftp.franz.com/pub/examples/pubpics/pubpics-1.30-linux-glibc-2.2.tar.gz
-ftp://ftp.franz.com/pub/examples/pubpics/pubpics-1.30-windows.zip
+ftp://ftp.franz.com/pub/examples/pubpics/pubpics-1.31-linux-glibc-2.2.tar.bz2
+ftp://ftp.franz.com/pub/examples/pubpics/pubpics-1.31-linux-glibc-2.2.tar.gz
+ftp://ftp.franz.com/pub/examples/pubpics/pubpics-1.31-windows.zip
 
 Linux:
 
   Unpack the .gz or .bz2 file like this:
 
-  % tar zxf pubpics-1.30-linux-glibc-2.2.tar.gz
+  % tar zxf pubpics-1.31-linux-glibc-2.2.tar.gz
   or
-  % bunzip2 < pubpics-1.30-linux-glibc-2.2.tar.bz2 | tar xf -
+  % bunzip2 < pubpics-1.31-linux-glibc-2.2.tar.bz2 | tar xf -
 
-  which will result in a ``pubpics-1.30'' sub-directory in the directory
+  which will result in a ``pubpics-1.31'' sub-directory in the directory
   in which you execute the tar command above.
 
   You can then move this directory somewhere, say /usr/local/ and put
-  /usr/local/pubpics-1.30 in your PATH so the `pubpics' executable is
+  /usr/local/pubpics-1.31 in your PATH so the `pubpics' executable is
   readily available.
 
 Windows:
