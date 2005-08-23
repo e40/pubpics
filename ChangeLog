@@ -3,6 +3,7 @@
 
 	* makefile: use 7.0 on Windows
 	* pubpics.cl: add -p
+	* readme.txt: update
 
 2005-06-23  Kevin Layer  <layer@relay.known.net>
 
