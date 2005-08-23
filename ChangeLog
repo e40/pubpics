@@ -1,7 +1,7 @@
 2005-08-23  Kevin Layer  <layer@relay.known.net>
 ***1.30 released***
 
-	* makefile: use 7.0 on Windows
+	* makefile: use 7.0 on Windows; fix dist for windows
 	* pubpics.cl: add -p
 	* readme.txt: update
 

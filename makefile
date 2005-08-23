@@ -52,7 +52,7 @@ src_zip = DIST/$(src_dir).zip
 readme = DIST/readme-$(version).txt
 
 src-dist: FORCE
-	rm -fr $(src_dir) $(src_gz)
+	rm -fr $(src_dir) $(src_gz) $(src_zip)
 	mkdir $(src_dir)
 	tar cf - $(src_files) | (cd $(src_dir); tar xf -)
 	tar zcf $(src_gz) $(src_dir)

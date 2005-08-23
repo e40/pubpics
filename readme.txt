@@ -124,8 +124,8 @@ files in the destination directory.
 
 Copy the appropriate binary distribution:
 
-ftp://ftp.franz.com/pub/examples/pubpics/pubpics-1.30-linux-glibc-2.1.tar.bz2
-ftp://ftp.franz.com/pub/examples/pubpics/pubpics-1.30-linux-glibc-2.1.tar.gz
+ftp://ftp.franz.com/pub/examples/pubpics/pubpics-1.30-linux-glibc-2.2.tar.bz2
+ftp://ftp.franz.com/pub/examples/pubpics/pubpics-1.30-linux-glibc-2.2.tar.gz
 ftp://ftp.franz.com/pub/examples/pubpics/pubpics-1.30-windows.zip
 
 Linux:
