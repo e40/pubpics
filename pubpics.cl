@@ -54,8 +54,8 @@
 (defvar *debug* nil)
 (defvar *usage*
     "~
-Usage: [-a file] [-p] [-c name] [-n size] [-V] [-q] [-t title] [-d description]
-       source-dir dest-dir
+Usage: [-a file] [-D] [-p] [-c name] [-n size] [-V] [-q] [-t title]
+       [-d description] source-dir dest-dir
 -a file        - annotations file
 -D             - debug
 -c name        - for the largest image size, add copyright in a border for
@@ -83,8 +83,9 @@ dest-dir       - non-existent directory for web pages
 (defvar *small-divisor* 3   "How much `small' images are scaled down.")
 (defvar .cleanup-forms. nil)
 (defvar .annotations. nil)
+(defvar .error-sleep. nil)
 
-(defun pubpics-init-function ()
+(defun pubpics-init-function (&aux do-pause)
   ;; The following makes run-shell-command interruptable.  Why, I have no
   ;; idea.  It appears that /bin/csh fixes something in how our signal
   ;; handling works.
@@ -92,10 +93,11 @@ dest-dir       - non-existent directory for web pages
   (flet ((doit ()
 	   (sys:with-command-line-arguments
 	       ("a:c:Dd:fn:pqrt:V"
-		annotations-file copyright debug description force-flag
-		index-size pause *quiet* recurse title
+		annotations-file copyright debug description
+		force-flag index-size pause *quiet* recurse title
 		print-version-and-exit)
 	       (rest)
+	     (when pause (setq do-pause t))
 	     (when print-version-and-exit
 	       (format t "pubpics: ~a~%" *version*)
 	       (exit 0 :quiet t))
@@ -131,6 +133,10 @@ dest-dir       - non-existent directory for web pages
 	      (error (c)
 		(format t "~a~%" c)
 		(dolist (form .cleanup-forms.) (funcall form c))
+		(when do-pause
+		  (format t "hit ENTER to continue:")
+		  (force-output)
+		  (read-line))
 		(exit 1 :quiet t))))))
 
 (defun pubpics (source-dir dest-dir

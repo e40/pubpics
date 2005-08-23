@@ -1,3 +1,7 @@
+2005-08-23  Kevin Layer  <layer@relay.known.net>
+
+	* pubpics.cl: add -p
+
 2005-06-23  Kevin Layer  <layer@relay.known.net>
 
 	* pubpics.cl: added ``-a file'' for annotating images
