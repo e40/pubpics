@@ -23,14 +23,15 @@ This software relies on other software:
 
 - Allegro CL 7.0 Enterprise.  `pubpics' is written in Allegro Common
   Lisp.  It's less than 1000 source lines of code, and does an amazing
-  amount for the size.
+  amount for this few lines of source.
 
   See http://www.franz.com for more information.
 
 - ImageMagick, a set of image manipulation programs.  `pubpics' has
   been tested with version 5.2.7 on Linux and 5.4.9 on Windows.  Other
   later versions probably work, but I'm pretty sure ones earlier than
-  5.2.7 have problems.
+  5.2.7 have problems.  It has been tested with 6.0.4 on Windows (with
+  Cygwin) and 6.2.4 on Linux.
 
   See http://www.imagemagick.org for more information.
 
@@ -70,15 +71,33 @@ linked to the cell to the left and/or right, and top and/or bottom.
 
 There are, of course, lots of options.  Here's a description of them:
 
+-a annotations-file
+    A file which contains annotations for pictures.  The format of the
+    file is an alist of (base-file-name . "annotation").  For example:
+
+    (
+    ("20050807-1241-1600-S1IS.JPG" .
+     "Adrian at the Santa Cruz boardwalk beach")
+    ("20050807-1241-2600-S1IS.JPG" .
+     "Adrian wrestling with the seaweed monster (he won)")
+    )
+
+    The generated web pages for the above files will then be
+    annotated with the given string.
+
+-B image-magick-root
+    The directory where ImageMagick binaries can be found.  This is
+    most useful on Windows, where there is a Windows convert.exe in
+    the Windows\system32 directory.
+
 -c name
     For the largest image size only, add a copyright notice in a
     border of the image.  It will appear like this:
 
 	Copyright (C) <name>, <year>
 
--t title
 -d description
-
+-t title
     The very top of each index page is annotated with the `title' and
     `description'.  The title appears first, then the description.
     The title can be something like "Party at Sherry's House" and the
@@ -88,23 +107,19 @@ There are, of course, lots of options.  Here's a description of them:
     description.
 
 -n size
-
     The maximum number of images on each index page will be set to
     `size'.  It is best if it is a multiple of 3, since there are
     three thumbnails per row on each index page.
 
 -p
-
     Pause after completion.  This is useful when run from a script and
     you want to make sure there are no error messages in the Window
     before it closes.
 
 -V
-
     Print version info and exit.
 
 -q
-
     Enter quiet mode.  That is, do not print informative messages that
     tell the progress of creating the destination directory.  Since it
     can take a long time to process 3 sets of images for each picture,
@@ -112,7 +127,6 @@ There are, of course, lots of options.  Here's a description of them:
     non-quiet mode.
 
 -r
-
     Recurse on the source directory.  Normally, only .jpg's in the
     source directory are considered.
 
