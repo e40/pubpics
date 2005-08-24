@@ -13,6 +13,8 @@
 
 (in-package :user)
 
+(defvar *version* "1.31")
+
 (eval-when (compile)
   ;; An experimental run-shell-command scheduler that allows multiple,
   ;; concurrent run-shell-command's, in order to take advantage of multiple
@@ -48,8 +50,6 @@
 (setq excl::*force-quiet-exit* t) ; 6.0
 (setq sys::.ignore-command-line-arguments. t)
 
-(defvar *version* "$Revision$")
-
 (defvar *quiet* nil)
 (defvar *debug* nil)
 (defvar *usage*
@@ -57,6 +57,7 @@
 Usage: [-a file] [-D] [-p] [-c name] [-n size] [-V] [-q] [-t title]
        [-d description] source-dir dest-dir
 -a file        - annotations file
+-B dir         - set ImageMagick binary root to `dir'
 -D             - debug
 -c name        - for the largest image size, add copyright in a border for
                  `name' 
@@ -92,8 +93,8 @@ dest-dir       - non-existent directory for web pages
   #+linux (setf (sys:getenv "SHELL") "/bin/csh")
   (flet ((doit ()
 	   (sys:with-command-line-arguments
-	       ("a:c:Dd:fn:pqrt:V"
-		annotations-file copyright debug description
+	       ("a:B:c:Dd:fn:pqrt:V"
+		annotations-file image-magick-root copyright debug description
 		force-flag index-size pause *quiet* recurse title
 		print-version-and-exit)
 	       (rest)
@@ -111,6 +112,11 @@ dest-dir       - non-existent directory for web pages
 			annotations-file))
 	       (with-open-file (s annotations-file :direction :input)
 		 (setq .annotations. (ignore-errors (read s)))))
+	     (when image-magick-root
+	       (when (not (probe-file image-magick-root))
+		 (error "~a does not exist." image-magick-root))
+	       (setq *image-magick-root*
+		 (pathname-as-directory image-magick-root)))
 	     #+rsc-scheduler (setq *quiet* t)
 	     (pubpics (first rest) (second rest) :force-flag force-flag
 		      :title title :description description

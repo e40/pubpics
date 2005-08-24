@@ -31,7 +31,7 @@ else
 endif
 
 version = \
- $(shell grep Revision: pubpics.cl | sed 's/.*Revision: \([0-9.]*\).*/\1/')
+ $(shell grep -F 'defvar *version*' pubpics.cl | sed 's/.*"\([0-9.]*\)".*/\1/')
 
 src_files = readme.txt ChangeLog *.cl exif-utils/*.cl *.gif makefile
 
@@ -46,15 +46,17 @@ bin_bz2 = DIST/$(bin_tar).bz2
 endif
 
 src_dir = pubpics-$(version)-src
-src_gz = DIST/$(src_dir).tar.gz
+src_gz  = DIST/$(src_dir).tar.gz
+src_zip = DIST/$(src_dir).zip
 
 readme = DIST/readme-$(version).txt
 
 src-dist: FORCE
-	rm -fr $(src_dir) $(src_gz)
+	rm -fr $(src_dir) $(src_gz) $(src_zip)
 	mkdir $(src_dir)
 	tar cf - $(src_files) | (cd $(src_dir); tar xf -)
 	tar zcf $(src_gz) $(src_dir)
+	find $(src_dir) -type f -print | zip -q $(src_zip) -@9
 	rm -fr $(src_dir)
 
 dist:	FORCE

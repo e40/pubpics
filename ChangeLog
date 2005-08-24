@@ -2,7 +2,10 @@
 ***1.31 released***
 
 	* makefile: use 7.0 on Windows; fix dist for windows
-	* pubpics.cl: add -p; *image-magick-root* => nil to use PATH
+	* pubpics.cl:
+	- add -p
+	- add -B to set *image-magick-root*, which defaults to nil (ie,
+	  use PATH)
 	* readme.txt: update
 
 2005-06-23  Kevin Layer  <layer@relay.known.net>
