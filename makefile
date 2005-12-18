@@ -1,14 +1,13 @@
 # $Id$
 
-on_windows = $(shell if test -d "c:/"; then echo yes; else echo no; fi)
-
 ifndef mlisp
-ifeq ($(on_windows),yes)
-acldir = /c/Program Files/acl70
-mlisp = "$(acldir)/mlisp.exe" +B +cn
-else
 mlisp = mlisp
 endif
+
+on_windows = $(shell if test -d "c:/"; then echo yes; else echo no; fi)
+
+ifeq ($(on_windows),yes)
+mlisp += +B +cn
 endif
 
 default:	build

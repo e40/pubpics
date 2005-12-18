@@ -1,3 +1,7 @@
+2005-12-17  Kevin Layer  <layer@relay.known.net>
+
+	* makefile: use mlisp, let path find version
+
 2005-08-23  Kevin Layer  <layer@relay.known.net>
 ***1.31 released***
 
