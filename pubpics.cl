@@ -13,7 +13,7 @@
 
 (in-package :user)
 
-(defvar *version* "1.31")
+(defvar *version* "1.32")
 
 (eval-when (compile)
   ;; An experimental run-shell-command scheduler that allows multiple,
@@ -229,7 +229,8 @@ dest-dir       - non-existent directory for web pages
       (error (c)
 	;; they might not have the new names, so don't sort if an error
 	;; occurs.
-	(format t "Error sorting files; ~a" c)
+	(format t "~
+Could not figure out how to sort files, so not sorting them...")
 	pictures)))
   
   (when (not *quiet*)
