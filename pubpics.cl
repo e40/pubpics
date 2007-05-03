@@ -226,7 +226,7 @@ dest-dir       - non-existent directory for web pages
 		 elseif (numbered-filename-p sample-file)
 		   then #'numbered-filename-sort-function
 		   else (error "can't figure out naming scheme"))))
-      (error (c)
+      (error ()
 	;; they might not have the new names, so don't sort if an error
 	;; occurs.
 	(format t "~
