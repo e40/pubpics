@@ -1,4 +1,3 @@
-# $Id$
 
 ifndef mlisp
 mlisp = mlisp
