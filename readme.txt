@@ -168,8 +168,8 @@ See http://www.imagemagick.org for more information.
 ===============================================================================
 3. Building from source code
 
-Start up a fully patched Allegro CL 7.0 Enterprise Edition and
-evaluate this:
+Start up a fully patched Allegro CL Enterprise Edition (any supported
+version will do) and evaluate this:
 
       (load "buildit.cl")
 
