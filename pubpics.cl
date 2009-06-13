@@ -364,9 +364,9 @@ Could not figure out how to sort files, so not sorting them...")
 		   ,(exif-info-image-length ed)))))
 
 (defun make-image (type info from to &key copyright)
-  (let* ((dimensions
-	  (or (cdr (assoc :dimensions info))
-	      (error "Could not determine dimensions of ~a." from)))
+  (let* ((dimensions (calc-dimensions type info from))
+	 (x (first dimensions))
+	 (y (second dimensions))
 	 (convert-command
 	  ;; The -size argument causes the convert command to operate
 	  ;; significantly faster on the thumbnail, medium and small
@@ -375,71 +375,40 @@ Could not figure out how to sort files, so not sorting them...")
 	     then ;; Only put a copyright notice on the large one, since
 		  ;; that's the one that would be useful to someone wanting
 		  ;; to steal one of my images (hey, it's possible!).
-		  (let ((x (truncate (first dimensions) *large-divisor*))
-			(y (truncate (second dimensions) *large-divisor*)))
-		    (with-output-to-string (s)
-		      (format s "~
+		  (with-output-to-string (s)
+		    (format s "~
 ~@[~a~]convert ~
-     -size ~ax~a ~
-     -geometry \"~ax~a>\" ~
+     -size ~a~@[x~a~] ~
+     -geometry \"~a~@[x~a~]>\" ~
      -quality 50 "
-			      *image-magick-root*
-			      x y x y)
-		      (when copyright
-			(format
-			 s "~
+			    *image-magick-root*
+			    x y x y)
+		    (when copyright
+		      (format
+		       s "~
      -border 20x20 -bordercolor black ~
      -pointsize 12 ~
      -fill white ~
      -font ~a ~
      -draw \"text 3,9 '~a ~d ~a'\" "
-			 ;; maybe newer versions on Windows don't require
-			 ;; the absolute path... it's bogus, for sure.
-			 #+mswindows "C:/Winnt/fonts/arialbd.ttf"
-			 #-mswindows "arialbd"
-			 #+mswindows "\\0x00a9" ;; Unicode copyright symbol
-			 #-mswindows "Copyright"
-			 (nth-value 5 (decode-universal-time
-				       (get-universal-time)))
-			 copyright))
-		      (format s "\"~a\" \"~a\""
-			      (forward-slashify (namestring from))
-			      (forward-slashify (namestring to)))))
-	     else (let* ((landscape (> (first dimensions)
-				       (second dimensions)))
-			 (tn-max 100)
-			 (tn-height
-			  (if* landscape
-			     then (round (* tn-max
-					    (/ (second dimensions)
-					       (first dimensions))))
-			     else tn-max))
-			 (tn-width
-			  (if* landscape
-			     then tn-max
-			     else (round (* tn-max
-					    (/ (first dimensions)
-					       (second dimensions))))))
-			 (x (if* (eq :thumbnail type)
-			       then tn-width
-			       else (truncate
-				     (first dimensions)
-				     (ecase type
-				       (:medium *medium-divisor*)
-				       (:small *small-divisor*)))))
-			 (y (if* (eq :thumbnail type)
-			       then tn-height
-			       else (truncate
-				     (second dimensions)
-				     (ecase type
-				       (:medium *medium-divisor*)
-				       (:small *small-divisor*))))))
-		    (format nil
-			    "~
-~@[~a~]convert -quality 50 -size ~ax~a -geometry \"~ax~a>\" \"~a\" \"~a\""
-			    *image-magick-root* x y x y
+		       ;; maybe newer versions on Windows don't require
+		       ;; the absolute path... it's bogus, for sure.
+		       #+mswindows "C:/Winnt/fonts/arialbd.ttf"
+		       #-mswindows "arialbd"
+		       #+mswindows "\\0x00a9" ;; Unicode copyright symbol
+		       #-mswindows "Copyright"
+		       (nth-value 5 (decode-universal-time
+				     (get-universal-time)))
+		       copyright))
+		    (format s "\"~a\" \"~a\""
 			    (forward-slashify (namestring from))
-			    (forward-slashify (namestring to))))))
+			    (forward-slashify (namestring to))))
+	     else (format nil
+			  "~
+~@[~a~]convert -quality 50 -size ~a~@[x~a~] -geometry \"~a~@[x~a~]>\" \"~a\" \"~a\""
+			  *image-magick-root* x y x y
+			  (forward-slashify (namestring from))
+			  (forward-slashify (namestring to)))))
 	 (status
 	  (progn
 	    (when *debug* (format t "~a~%~%" convert-command))
@@ -453,6 +422,35 @@ Could not figure out how to sort files, so not sorting them...")
       (error "Convert command failed on ~a with status ~d."
 	     (file-namestring from) status))
     t))
+
+(defun calc-dimensions (type info file)
+  (assert (member type '(:thumbnail :large :medium :small) :test #'eq))
+  (let* ((dimensions
+	  (or (cdr (assoc :dimensions info))
+	      (error "Could not determine dimensions of ~a." file)))
+	 (width (first dimensions))
+	 (height (second dimensions))
+	 (maxsize
+	  (case type
+	    (:large     1365)
+	    (:medium    1025)
+	    (:small      682)
+	    (:thumbnail  100))))
+    ;; width == current width
+    ;; height == current height
+    ;; maxsize == largest either width or height can be
+    (if* (>= width height)
+       then ;; landscape image, using the maxsize as the width to the
+	    ;; ImageMagick's convert works fine.
+	    (list maxsize nil)
+       else ;; portrait image, need to provide scaled W & H
+	    ;;   w     new-width
+	    ;;  --- = --------------------------
+	    ;;   h     maxsize (aka new-height)
+	    (list
+	     ;; new-width =
+	     (floor (* maxsize (/ width height)))
+	     maxsize))))
 
 (defun make-page (size s image image-number index-size previous-page
 		  next-page title other-sizes
@@ -793,3 +791,4 @@ Could not figure out how to sort files, so not sorting them...")
 	  nil
      else t)
   (setq *rsc-procs* nil))
+

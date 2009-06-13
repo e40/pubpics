@@ -1,3 +1,9 @@
+2009-06-13  layer  <layer@relay.known.net>
+
+	* pubpics.cl: redo the image size calculations so that they
+	  are constant and not dependent on the size of the input
+	  images
+
 2007-05-02  Kevin Layer  <layer@relay.known.net>
 
 	* pubpics.cl: squash warning
