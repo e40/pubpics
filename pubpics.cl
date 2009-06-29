@@ -13,7 +13,7 @@
 
 (in-package :user)
 
-(defvar *version* "1.32")
+(defvar *version* "1.33")
 
 (eval-when (compile)
   ;; An experimental run-shell-command scheduler that allows multiple,
@@ -78,6 +78,11 @@ dest-dir       - non-existent directory for web pages
 (defvar *image-magick-root*
     ;; must be in path
     nil)
+
+(defvar *quality* 90
+  ;; used to use quality 50, but it's really crappy with the LX3, for some
+  ;; reason.
+  )
 
 (defvar *large-divisor* 1.5 "How much `large' images are scaled down.")
 (defvar *medium-divisor* 2  "How much `medium' images are scaled down.")
@@ -377,11 +382,11 @@ Could not figure out how to sort files, so not sorting them...")
 		  ;; to steal one of my images (hey, it's possible!).
 		  (with-output-to-string (s)
 		    (format s "~
-~@[~a~]convert ~
+~@[~a~]convert -quality ~a ~
      -size ~a~@[x~a~] ~
-     -geometry \"~a~@[x~a~]>\" ~
-     -quality 50 "
+     -geometry \"~a~@[x~a~]>\" "
 			    *image-magick-root*
+			    *quality*
 			    x y x y)
 		    (when copyright
 		      (format
@@ -405,8 +410,8 @@ Could not figure out how to sort files, so not sorting them...")
 			    (forward-slashify (namestring to))))
 	     else (format nil
 			  "~
-~@[~a~]convert -quality 50 -size ~a~@[x~a~] -geometry \"~a~@[x~a~]>\" \"~a\" \"~a\""
-			  *image-magick-root* x y x y
+~@[~a~]convert -quality ~a -size ~a~@[x~a~] -geometry \"~a~@[x~a~]>\" \"~a\" \"~a\""
+			  *image-magick-root* *quality* x y x y
 			  (forward-slashify (namestring from))
 			  (forward-slashify (namestring to)))))
 	 (status
