@@ -23,7 +23,7 @@ ifeq ($(on_windows),yes)
 else
 	rm -fr /usr/local/pubpics
 	mkdir /usr/local/pubpics
-	cp -p pubpics/* /usr/local/pubpics
+	cp -rp pubpics/* /usr/local/pubpics
 	rm -f /usr/local/bin/pubpics
 	ln -s /usr/local/pubpics/pubpics /usr/local/bin/pubpics
 endif

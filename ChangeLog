@@ -1,3 +1,7 @@
+2010-01-23  layer  <layer@relay.known.net>
+
+	* makefile: add -r to copy of pubpics, since locales/ is in there now
+
 2009-06-28  layer  <layer@relay.known.net>
 1.33
 
