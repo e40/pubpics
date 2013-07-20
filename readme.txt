@@ -19,7 +19,7 @@ copyright notice added to them.
 
 This software relies on other software:
 
-- Allegro CL 7.0 Enterprise.  `pubpics' is written in Allegro Common
+- Allegro CL 9.0 Enterprise.  `pubpics' is written in Allegro Common
   Lisp.  It's less than 1000 source lines of code, and does an amazing
   amount for this few lines of source.
 
@@ -136,26 +136,27 @@ files in the destination directory.
 
 Copy the appropriate binary distribution:
 
-ftp://ftp.franz.com/pub/examples/pubpics/pubpics-1.31-linux-glibc-2.2.tar.bz2
-ftp://ftp.franz.com/pub/examples/pubpics/pubpics-1.31-linux-glibc-2.2.tar.gz
-ftp://ftp.franz.com/pub/examples/pubpics/pubpics-1.31-windows.zip
+http://franz.com/ftp/pub/examples/pubpics/pubpics-1.33-linux-glibc-2.12.tar.bz2
+http://franz.com/ftp/pub/examples/pubpics/pubpics-1.33-linux-glibc-2.12.tar.gz
 
 Linux:
 
   Unpack the .gz or .bz2 file like this:
 
-  % tar zxf pubpics-1.31-linux-glibc-2.2.tar.gz
+  % tar zxf pubpics-1.33-linux-glibc-2.12.tar.gz
   or
-  % bunzip2 < pubpics-1.31-linux-glibc-2.2.tar.bz2 | tar xf -
+  % bunzip2 < pubpics-1.33-linux-glibc-2.12.tar.bz2 | tar xf -
 
-  which will result in a ``pubpics-1.31'' sub-directory in the directory
+  which will result in a ``pubpics-1.33'' sub-directory in the directory
   in which you execute the tar command above.
 
   You can then move this directory somewhere, say /usr/local/ and put
-  /usr/local/pubpics-1.31 in your PATH so the `pubpics' executable is
+  /usr/local/pubpics-1.33 in your PATH so the `pubpics' executable is
   readily available.
 
 Windows:
+
+  [There is no Windows version at this time]
 
   Unzip the binary and put the files somewhere in your PATH.  The
   file in the ``system-dlls'' sub-directory, msvcrt.dll, will only be

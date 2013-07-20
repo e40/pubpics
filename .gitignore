@@ -1,6 +1,6 @@
-pubpics/
-exif-utils/
+/pubpics/
+/exif-utils/
 *.fasl
-pubpics
-test
-testout
+/test
+/testout
+/DIST/

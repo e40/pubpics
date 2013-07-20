@@ -38,7 +38,7 @@ bin_dir = pubpics-$(version)
 ifeq ($(on_windows),yes)
 bin_zip = DIST/$(bin_dir)-windows.zip
 else
-bin_tar = $(bin_dir)-linux-glibc-2.2.tar
+bin_tar = $(bin_dir)-linux-glibc-2.12.tar
 bin_gz  = DIST/$(bin_tar).gz
 bin_bz2 = DIST/$(bin_tar).bz2
 endif
@@ -46,8 +46,6 @@ endif
 src_dir = pubpics-$(version)-src
 src_gz  = DIST/$(src_dir).tar.gz
 src_zip = DIST/$(src_dir).zip
-
-readme = DIST/readme-$(version).txt
 
 src-dist: FORCE
 	rm -fr $(src_dir) $(src_gz) $(src_zip)
@@ -58,10 +56,10 @@ src-dist: FORCE
 	rm -fr $(src_dir)
 
 dist:	FORCE
-	rm -fr $(bin_dir) $(bin_zip) $(bin_tar) $(bin_gz) $(bin_bz2) $(readme)
+	mkdir -p DIST
+	rm -fr $(bin_dir) $(bin_zip) $(bin_tar) $(bin_gz) $(bin_bz2)
 	cp -rp pubpics $(bin_dir)
 	cp -p readme.txt $(bin_dir)
-	cp -p readme.txt $(readme)
 ifeq ($(on_windows),yes)
 	find $(bin_dir) -type f -print | zip -q $(bin_zip) -@9
 else
